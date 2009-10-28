@@ -1,0 +1,26 @@
+SQL Attributes Collector
+
+This class implements a collector that retrieves attributes from a database.
+It shoud word against both MySQL and PostgreSQL
+
+It has the following options:
+- dsn: The DSN which should be used to connect to the database server. Check the various
+       database drivers in http://php.net/manual/en/pdo.drivers.php for a description of
+       the various DSN formats.
+- username: The username which should be used when connecting to the database server.
+- password: The password which should be used when connecting to the database server.
+- query: The sql query for retrieve attributes. You can use the special :uidfield string
+         to refer the value of the field especified as an uidfield in the processor.
+
+
+Example - with PostgreSQL database:
+
+'collector' => array(
+      'class' => 'attributecollector:SQLCollector',
+      'dsn' => 'pgsql:host=localhost;dbname=simplesaml',
+      'username' => 'simplesaml',
+      'password' => 'secretpassword',
+      'query' => 'select address, phone, country from extraattributes where uid=:uidfield',
+      ),
+    ),
+  ),
