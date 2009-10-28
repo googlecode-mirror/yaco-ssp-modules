@@ -1,0 +1,33 @@
+Basic Installation
+==================
+
+1. Place your CA certificates into a directory
+2. Place your CRL certificatis into a directory
+3. Be sure you have run c_rehash into both ca and crl directories
+4. Edit the config/authsources.php file and add:
+
+'x509auth' => array(
+	'x509auth:X509Auth',
+	'capath' => 'Path to your CA certificates directory',
+	'crlpath' => 'Path to your CRL certificates directory',
+),
+5. Configure apache in order to request the user certificate by editing your
+   vhost.
+
+   You can request a valid certificate for all the https requests (so when you
+   try to authenticate the certificate will already be available). Add to your
+   already configured https vhost:
+
+   SSLVerifyClient require
+   SSLCACertificatePath Path to your CA certificates directory
+   SSLOptions +StdEnvVars +ExportCertData
+
+   Or you can request a valid certificate only when trying to login. Add to
+   your already configured https vhost:
+
+   SSLVerifyClient none
+   <Location /path_to_your_simplesamlphp/module.php/x509auth/login.php>
+   SSLVerifyClient require
+   SSLCACertificatePath Path to your CA certificates directory
+   SSLOptions +StdEnvVars +ExportCertData
+   </Location>
