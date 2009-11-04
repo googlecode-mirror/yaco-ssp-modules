@@ -2,11 +2,9 @@
 
 class sspmod_x509auth_Auth_Source_X509Auth extends SimpleSAML_Auth_Source {
 
-	/**
-	 * A LDAP configuration object.
-	 */
-	private static $capath;
-	private static $crlpath;
+	private $capath;
+	private $crlpath;
+	private $ocpurl;
 
         //The string used to identify our states.
         const STAGEID = 'sspmod_core_Auth_UserPassBase.state';
@@ -26,13 +24,24 @@ class sspmod_x509auth_Auth_Source_X509Auth extends SimpleSAML_Auth_Source {
 		assert('is_array($info)');
 		assert('is_array($config)');
 		assert('array_key_exists("capath", $config)');
-		assert('array_key_exists("crlpath", $config)');
+		assert('array_key_exists("crlpath", $config) || array_key_exists("ocpurl", $config)');
 
 		/* Call the parent constructor first, as required by the interface. */
 		parent::__construct($info, $config);
 
 		$this->capath = $config['capath'];
-		$this->crlpath = $config['crlpath'];
+
+		if (array_key_exists('crlpath', $config)) {
+		    $this->crlpath = $config['crlpath'];
+		} else {
+		    $this->crlpath = NULL;
+		}
+
+		if (array_key_exists('ocpurl', $config)) {
+		    $this->ocpurl = $config['ocpurl'];
+		} else {
+		    $this->ocpurl = NULL;
+		}
 	}
 
 
@@ -49,7 +58,8 @@ class sspmod_x509auth_Auth_Source_X509Auth extends SimpleSAML_Auth_Source {
 
        public static function handleLogin($authStateId, $x509) {
                 assert('is_string($authStateId)');
-		assert('openssl_x509_export($x509, &$pem)');
+		//		assert('openssl_x509_export($x509, &$pem) === TRUE');
+		$pem = $x509;
 		SimpleSAML_Logger::notice('+++++++++++++++'. $pem);
 		assert('is_string($pem)');
 
@@ -64,8 +74,16 @@ class sspmod_x509auth_Auth_Source_X509Auth extends SimpleSAML_Auth_Source {
 		}
 
                 $capath = $source->capath;
-                $crlpath = $source->crlpath;
-                $result = sspmod_x509auth_Utilities::validateCertificateWithCRLs($pem, $capath, $crlpath);
+		if ($source->crlpath !== NULL) {
+		    $crlpath = $source->crlpath;
+		    $result = sspmod_x509auth_Utilities::validateCertificateWithCRLs($pem, $capath, $crlpath);
+		} elseif ($source->ocpurl !== NULL) {
+		    $ocpurl = $source->ocpurl;
+		    $issuer = $_SERVER['SSL_CLIENT_CERT_CHAIN_0'];
+		    $result = sspmod_x509auth_Utilities::validateCertificateWithOCP($pem, $capath, $ocpurl, $issuer);
+		} else {
+			throw new Exception('Could not validate certificate because no CRL or OCP have been setup for the authentication source' . $state[self::AUTHID]);
+		}
 
                 if($result[0]) {
                         $attributes = array();
@@ -76,8 +94,6 @@ class sspmod_x509auth_Auth_Source_X509Auth extends SimpleSAML_Auth_Source {
                         return $result[1];
                 }
         }
-
-
 }
 
 

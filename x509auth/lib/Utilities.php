@@ -73,6 +73,33 @@ class sspmod_x509auth_Utilities {
 		return array(True,'');
 	}
 
+	public static function validateCertificateWithOCP($certificate, $capath, $ocpurl, $issuer) {
+		assert('is_string($certificate)');
+		assert('is_string($capath)');
+		assert('is_string($ocpurl)');
+
+		if (!is_dir($capath)) {
+			throw new Exception('Could not find CAs dir: ' . $capath);
+		}
+
+		$issuer_cert_path = tempnam('/tmp', '');
+		file_put_contents($issuer_cert_path, $issuer);
+		$cmdoptions = array(
+			'-CApath', $capath,
+			'-url', $ocpurl,
+			'-issuer', $issuer_cert_path,
+			'-noverify', // WARNING
+			'-cert', '/dev/stdin',
+			);
+		$result = self::opensslExec('ocsp', $certificate, $cmdoptions);
+		unlink($issuer_cert_path);
+                if ($result[0] !== 0 || preg_match('/\/dev\/stdin: good.*/', $result[1]) === 0) {
+		    return array(False,self::parseVerifyError($result[1]));
+                }
+
+		return array(True, '');
+	}
+
 
 	public static function parseVerifyError($output) {
 		assert('is_string($output)');

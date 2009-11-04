@@ -17,7 +17,6 @@ if (!array_key_exists('AuthState', $_REQUEST)) {
 	$authStateId = $_REQUEST['AuthState'];
 }
 
-SimpleSAML_Logger::notice('>>>>>>>>>>>>>>>>>>>' . get_class($cert) . '>>>>>>>>>>' . $cert);
 if(array_key_exists('SSL_CLIENT_CERT', $_SERVER) && ($_SERVER['SSL_CLIENT_CERT']!=NULL)  ) {
 	$error = sspmod_x509auth_Auth_Source_X509Auth::handleLogin($authStateId, $_SERVER['SSL_CLIENT_CERT']);
 }else {
