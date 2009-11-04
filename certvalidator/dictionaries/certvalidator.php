@@ -12,8 +12,8 @@ $lang = array(
 	),
 
 	'user_CV_text' => array (
-		'en' => 'Bellow you can validate a certificate. Please, paste in the text area a PEM (Base64 encoded DER certificate) certificate.',
-		'es' => 'A continuación puede validar un certificado. Por favor, copie en el cuadro de texto un certificado PEM (Certificado DER codificado en Base64).',
+		'en' => 'Below you can validate a certificate. Paste a PEM (Base64 encoded DER certificate) certificate in the following text area.',
+		'es' => 'A continuación puede validar un certificado. Por favor, copie en el cuadro de texto un certificado PEM (certificado DER codificado en Base64).',
 	),
 
 	'error_header' => array (
