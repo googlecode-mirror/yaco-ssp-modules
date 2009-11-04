@@ -1,0 +1,55 @@
+h2 {
+   margin-bottom: 0.5em;
+}
+
+span.messageOk {
+   margin-top: 1em;
+   border: 1px solid  #38a962;
+   color: #38a962;
+   padding: 0.3em 3em 0.3em 1em;
+   background: #f5f9f2 url(../img/thumbs_up.jpg) no-repeat 98% center;
+}
+
+span.messageBad {
+   border: 1px solid #ee3124;
+   color: #ee3124;
+   padding: 0.3em 3em 0.3em 1em;
+   background: #fff8f8 url(../img/thumbs_down.jpg) no-repeat 98% center;
+}
+
+.table_with_attributes {
+    width: 90%;
+    margin: 0 auto;
+    border: 1px solid #BBBBBB;
+}
+
+tr.tableHeader th {
+    color: white;
+    background: transparent url(../img/table_header_back.jpg) repeat-x top left;
+    padding: 5px 1em 5px 1em;
+}
+
+th.rightWhite,
+table.attributes tr td.rightWhite {
+    border-right: 1px solid white;
+}
+
+table.attributes tr.even.colorrow td {
+    background: #ffebec;
+}
+
+table.attributes tr.odd.colorrow td {
+    background: #ffdfe0;
+}
+
+table.attributes tr td.attrmissing {
+    width: 70px;
+}
+
+table.attributes tr td.attrmissing img {
+    margin: 0 auto;
+}
+
+table.attributes td.attrname {
+    text-align: left;
+}
