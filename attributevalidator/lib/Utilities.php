@@ -11,7 +11,7 @@ class sspmod_attributevalidator_Utilities {
 				unset($attrs[$name]);
 			} else {
 			    $value = "";
-			  	$missing = True;
+				$missing = True;
 				$all_present = False;
 			}
 			$filtered_list[$name] = array(
