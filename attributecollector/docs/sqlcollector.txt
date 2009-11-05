@@ -16,11 +16,9 @@ It has the following options:
 Example - with PostgreSQL database:
 
 'collector' => array(
-      'class' => 'attributecollector:SQLCollector',
-      'dsn' => 'pgsql:host=localhost;dbname=simplesaml',
-      'username' => 'simplesaml',
-      'password' => 'secretpassword',
-      'query' => 'select address, phone, country from extraattributes where uid=:uidfield',
-      ),
-    ),
-  ),
+	'class' => 'attributecollector:SQLCollector',
+	'dsn' => 'pgsql:host=localhost;dbname=simplesaml',
+	'username' => 'simplesaml',
+	'password' => 'secretpassword',
+	'query' => 'select address, phone, country from extraattributes where uid=:uidfield',
+)

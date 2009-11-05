@@ -1,10 +1,10 @@
 <?php
 
 /*
- *  Base class for collectors
- *  
- *  If you just extend this collector without override any functions
- *  it returns as attributes its configuration array
+ *	Base class for collectors
+ *
+ *	If you just extend this collector without override any functions
+ *	it returns as attributes its configuration array
  */
 
 class sspmod_attributecollector_SimpleCollector {
@@ -12,9 +12,9 @@ class sspmod_attributecollector_SimpleCollector {
 	protected $attributes = array();
 
 	/* Initialize this collector.
-         *
-         * @param array $config  Configuration information about this collector.
-         */
+	 *
+	 * @param array $config	 Configuration information about this collector.
+	 */
 
 	public function __construct($config) {
 		assert('is_array($config)');
@@ -39,11 +39,11 @@ class sspmod_attributecollector_SimpleCollector {
 	}
 
 	/* Get collected attributes
-         *
-         * @param array $originalAttributes  Original attributes existing before this collector has been called
-         * @param string $uidfield  Name of the field used as uid
-         * @return array  Attributes collected
-         */
+	 *
+	 * @param array $originalAttributes	 Original attributes existing before this collector has been called
+	 * @param string $uidfield	Name of the field used as uid
+	 * @return array  Attributes collected
+	 */
 	public function getAttributes($originalAttributes, $uidfield) {
 		return $this->attributes;
 	}

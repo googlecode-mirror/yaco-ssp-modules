@@ -8,25 +8,25 @@
  *
  * It has the following options:
  * - dsn: The DSN which should be used to connect to the database server. Check the various
- *        database drivers in http://php.net/manual/en/pdo.drivers.php for a description of
- *        the various DSN formats.
+ *		  database drivers in http://php.net/manual/en/pdo.drivers.php for a description of
+ *		  the various DSN formats.
  * - username: The username which should be used when connecting to the database server.
  * - password: The password which should be used when connecting to the database server.
  * - query: The sql query for retrieve attributes. You can use the special :uidfield string
- *          to refer the value of the field especified as an uidfield in the processor.
+ *			to refer the value of the field especified as an uidfield in the processor.
  *
  *
  * Example - with PostgreSQL database:
  * <code>
  * 'collector' => array(
- *       'class' => 'attributecollector:SQLCollector',
- *       'dsn' => 'pgsql:host=localhost;dbname=simplesaml',
- *       'username' => 'simplesaml',
- *       'password' => 'secretpassword',
- *       'query' => 'select address, phone, country from extraattributes where uid=:uidfield',
- *       ),
- *     ),
- *   ),
+ *		 'class' => 'attributecollector:SQLCollector',
+ *		 'dsn' => 'pgsql:host=localhost;dbname=simplesaml',
+ *		 'username' => 'simplesaml',
+ *		 'password' => 'secretpassword',
+ *		 'query' => 'select address, phone, country from extraattributes where uid=:uidfield',
+ *		 ),
+ *	   ),
+ *	 ),
  * </code>
  */
 class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributecollector_SimpleCollector {
@@ -64,10 +64,10 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 	private $db;
 
 
-        /* Initialize this collector.
-         *
-         * @param array $config  Configuration information about this collector.
-         */
+	/* Initialize this collector.
+	 *
+	 * @param array $config	 Configuration information about this collector.
+	 */
 	public function __construct($config) {
 
 		foreach (array('dsn', 'username', 'password', 'query') as $id) {
@@ -86,20 +86,20 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 	}
 
 
-        /* Get collected attributes
-         *
-         * @param array $originalAttributes  Original attributes existing before this collector has been called
-         * @param string $uidfield  Name of the field used as uid
-         * @return array  Attributes collected
-         */
-        public function getAttributes($originalAttributes, $uidfield) {
+	/* Get collected attributes
+	 *
+	 * @param array $originalAttributes	 Original attributes existing before this collector has been called
+	 * @param string $uidfield	Name of the field used as uid
+	 * @return array  Attributes collected
+	 */
+	public function getAttributes($originalAttributes, $uidfield) {
 		assert('array_key_exists($uidfield, $originalAttributes)');
 		$db = $this->getDB();
 		$st = $db->prepare($this->query);
 		$res = $st->execute(array('uidfield' => $originalAttributes[$uidfield][0]));
 
 		return $st->fetch(PDO::FETCH_ASSOC);
-        }
+	}
 
 
 	/**

@@ -13,22 +13,22 @@ class sspmod_attributecollector_Auth_Process_AttributeCollector extends SimpleSA
 	/**
 	 * Get and initialize the configured collector
 	 *
-	 * @param array $config  Configuration information about this filter.
+	 * @param array $config	 Configuration information about this filter.
 	 */
 	private function getCollector($config) {
 		if (!array_key_exists("collector", $config) || !array_key_exists("class", $config["collector"])) {
 			throw new Exception('No collector class specified in configuration');
 		}
 		$collectorConfig = $config["collector"];
-                $collectorClassName = SimpleSAML_Module::resolveClass($collectorConfig['class'], 'Collector', 'sspmod_attributecollector_SimpleCollector');
-                unset($collectorConfig['class']);
+		$collectorClassName = SimpleSAML_Module::resolveClass($collectorConfig['class'], 'Collector', 'sspmod_attributecollector_SimpleCollector');
+		unset($collectorConfig['class']);
 		return new $collectorClassName($collectorConfig);
 	}
 
 	/**
 	 * Initialize this filter.
 	 *
-	 * @param array $config  Configuration information about this filter.
+	 * @param array $config	 Configuration information about this filter.
 	 * @param mixed $reserved  For future use.
 	 */
 	public function __construct($config, $reserved) {
@@ -75,7 +75,6 @@ class sspmod_attributecollector_Auth_Process_AttributeCollector extends SimpleSA
 			}
 		}
 	}
-
 }
 
 ?>
