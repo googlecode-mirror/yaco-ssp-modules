@@ -7,20 +7,20 @@ $myconfig = SimpleSAML_Configuration::getConfig('config-attributevalidator.php')
 $authsource = $myconfig->getValue('auth', 'login-admin');
 
 if ($session->isValid($authsource)) {
-    $attributes = $session->getAttributes();
-    // Check if userid exists
+	$attributes = $session->getAttributes();
+	// Check if userid exists
 } else {
-    SimpleSAML_Auth_Default::initLogin(
-        $authsource,
-        SimpleSAML_Utilities::selfURL(),
-        NULL,
-        array(
-            'SPMetadata' => array(
-                'token' => $_REQUEST['token'],
-                'mail' => $_REQUEST['mail']
-            )
-        )
-    );
+	SimpleSAML_Auth_Default::initLogin(
+		$authsource,
+		SimpleSAML_Utilities::selfURL(),
+		NULL,
+		array(
+			'SPMetadata' => array(
+				'token' => $_REQUEST['token'],
+				'mail' => $_REQUEST['mail']
+			)
+		)
+	);
 }
 
 unset($_POST); //Show the languages bar if reloaded
@@ -34,3 +34,5 @@ $t->data['attributes'] = sspmod_attributevalidator_AttributeValidator::validateA
 $t->data['logouturl'] = SimpleSAML_Utilities::selfURLNoQuery() . '?logout';
 $t->data['icon'] = 'bino.png';
 $t->show();
+
+?>

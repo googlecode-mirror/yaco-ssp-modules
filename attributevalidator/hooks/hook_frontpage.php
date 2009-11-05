@@ -10,11 +10,11 @@
  */
 function AttributeValidator_Hook_frontpage(&$links)
 {
-    assert('is_array($links)');
+	assert('is_array($links)');
 
-    $links['federation'][] = array(
-        'href' => SimpleSAML_Module::getModuleURL('attributevalidator/validate.php'),
-        'text' => array('en' => 'Attribute validator module'),
-    );
+	$links['federation'][] = array(
+		'href' => SimpleSAML_Module::getModuleURL('attributevalidator/validate.php'),
+		'text' => array('en' => 'Attribute validator module'),
+	);
 }
 ?>
