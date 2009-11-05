@@ -29,7 +29,7 @@ class sspmod_attributevalidator_AttributeValidator {
 		$filtered_attributes = sspmod_attributevalidator_Utilities::validateAttributes($attributes, $required_attrs, $recommended_attrs, $optional_attrs);
 
 		return $filtered_attributes;
-    }
+	}
 }
 
 ?>
