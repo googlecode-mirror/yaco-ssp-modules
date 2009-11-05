@@ -14,7 +14,7 @@ class sspmod_adminattrs_Auth_Source_AdminPasswordAttributes extends sspmod_core_
 	 * Constructor for this authentication source.
 	 *
 	 * @param array $info  Information about this authentication source.
-	 * @param array $config  Configuration.
+	 * @param array $config	 Configuration.
 	 */
 	public function __construct($info, $config) {
 		assert('is_array($info)');
@@ -36,8 +36,8 @@ class sspmod_adminattrs_Auth_Source_AdminPasswordAttributes extends sspmod_core_
 	 *
 	 * Note that both the username and the password are UTF-8 encoded.
 	 *
-	 * @param string $username  The username the user wrote.
-	 * @param string $password  The password the user wrote.
+	 * @param string $username	The username the user wrote.
+	 * @param string $password	The password the user wrote.
 	 * @return array  Associative array with the users attributes.
 	 */
 	protected function login($username, $password) {
@@ -59,7 +59,6 @@ class sspmod_adminattrs_Auth_Source_AdminPasswordAttributes extends sspmod_core_
 			throw new SimpleSAML_Error_Error('WRONGUSERPASS');
 		}
 
-
 		$config = SimpleSAML_Configuration::getConfig('module_adminattrs.php');
 
 		$attrs = array();
@@ -70,6 +69,5 @@ class sspmod_adminattrs_Auth_Source_AdminPasswordAttributes extends sspmod_core_
 	}
 
 }
-
 
 ?>
