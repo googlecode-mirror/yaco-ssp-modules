@@ -1,14 +1,13 @@
 <?php
 
-class sspmod_x509auth_Utilities {
+class sspmod_x509_Utilities {
 
 	private static function opensslExec($command, $certificate, $options) {
 		assert('is_string($command)');
 		assert('is_string($certificate)');
 		assert('is_array($options)');
 
-		$cmdarray = array(
-			'openssl', $command);
+		$cmdarray = array('openssl', $command);
 
 		$cmdline = '';
 		foreach($cmdarray as $c) {
@@ -47,6 +46,34 @@ class sspmod_x509auth_Utilities {
 		return array($status, $out);
 	}
 
+	public static function convertCRL($crl_data, $crlpath, $filename) {
+		assert('is_string($crl_data)');
+		assert('is_string($crlpath)');
+		assert('is_string($filename)');
+
+		$cmdoptions = array(
+			'-inform', 'DER',
+			'-outform', 'PEM',
+			'-out', $crlpath . '/' . $filename
+		);
+		$result = self::opensslExec('crl', $crl_data, $cmdoptions);
+		if($result[0]) {
+			$cmdoptions = array(
+				'-inform', 'PEM',
+				'-outform', 'PEM',
+				'-out', $crlpath . '/' . $filename);
+			$result = self::opensslExec('crl', $crl_data, $cmdoptions);
+		}
+		return $result;
+	}
+
+	public static function rehash($crl_data) {
+		assert('is_string($crl_data)');
+
+		$cmdoptions = array('-hash', '-noout');
+		$result = self::opensslExec('crl', $crl_data, $cmdoptions);
+		return $result;
+	}
 
 	public static function validateCertificateWithCRLs($certificate, $capath, $crlpath) {
 		assert('is_string($certificate)');
@@ -100,7 +127,6 @@ class sspmod_x509auth_Utilities {
 		return array(True, '');
 	}
 
-
 	public static function parseVerifyError($output) {
 		assert('is_string($output)');
 
@@ -112,7 +138,6 @@ class sspmod_x509auth_Utilities {
 		}
 		return 'patata';
 	}
-
 
 	public static function getAttributesFromCert($certificate, &$attributes) {
 		assert('is_string($certificate)');
