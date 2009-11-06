@@ -1,6 +1,6 @@
 <?php
 
-class sspmod_certvalidator_CertValidator {
+class sspmod_x509_CertValidator {
 
 	private static $capath;
 	private static $crlpath;
