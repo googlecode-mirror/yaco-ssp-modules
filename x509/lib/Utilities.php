@@ -75,7 +75,7 @@ class sspmod_x509_Utilities {
 		return $result;
 	}
 
-	public static function validateCertificateWithCRLs($certificate, $capath, $crlpath) {
+	public static function validateCertificateWithCRL($certificate, $capath, $crlpath) {
 		assert('is_string($certificate)');
 		assert('is_string($capath)');
 		assert('is_string($crlpath)');
@@ -100,7 +100,7 @@ class sspmod_x509_Utilities {
 		return array(True,'');
 	}
 
-	public static function validateCertificateWithOCP($certificate, $capath, $ocpurl, $issuer) {
+	public static function validateCertificateWithOCSP($certificate, $capath, $ocpurl, $issuer) {
 		assert('is_string($certificate)');
 		assert('is_string($capath)');
 		assert('is_string($ocpurl)');
@@ -143,13 +143,18 @@ class sspmod_x509_Utilities {
 		assert('is_string($certificate)');
 		assert('is_array($attributes)');
 
-		$cmdoptions = array('-noout', '-subject', '-issuer');
+		$cmdoptions = array('-noout', '-subject');
 		$result = self::opensslExec('x509', $certificate, $cmdoptions);
 		if ($result[0] == 0) {
 			foreach(explode('\n', $result[1]) as $value) {
 				if ($value) {
-					$attr = explode('= ', $value, 2);
-					$attributes[$attr[0]] = array($attr[1]);
+					$subject = explode('= ', $value, 2);
+					foreach(explode('/', $subject[1]) as $attribute) {
+						if ($attribute) {
+							$attr = explode('=', $attribute, 2);
+							$attributes[$attr[0]] = array($attr[1]);
+						}
+					}
 				}
 			}
 
