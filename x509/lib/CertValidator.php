@@ -32,9 +32,8 @@ class sspmod_x509_CertValidator {
 
 		$capath = $autoconfig->getValue('capath');
 		$crlpath = $autoconfig->getValue('crlpath');
-		$crl_check = $autoconfig->getBoolean('crl_check', FALSE);
 
-			if(strpos($pem, "-----BEGIN CERTIFICATE-----") === FALSE) {
+		if(strpos($pem, "-----BEGIN CERTIFICATE-----") === FALSE) {
 $pem = <<<CERTEOT
 -----BEGIN CERTIFICATE-----
 $pem
@@ -42,7 +41,7 @@ $pem
 CERTEOT;
 			}
 
-		$result = sspmod_certvalidator_Utilities::validateCertificate($pem, $capath, $crlpath, $crl_check);
+		$result = sspmod_x509_Utilities::validateCertificateWithCRL($pem, $capath, $crlpath);
 
 		if($result[0]) {
 			return "cert_validation_success";
@@ -50,8 +49,5 @@ CERTEOT;
 			return $result[1];
 		}
 	}
-
 }
-
-
 ?>
