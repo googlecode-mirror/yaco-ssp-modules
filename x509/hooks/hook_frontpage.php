@@ -1,9 +1,9 @@
 <?php
 /**
- * Frontpage hook for Certvalidator 
+ * Frontpage hook for Certvalidator
  *
- * This hook adds a link to JANUS to the frontapage of the local SimpleSAMLphp 
- * installation. 
+ * This hook adds a link to JANUS to the frontapage of the local SimpleSAMLphp
+ * installation.
  *
  * @param array &$links The links on the frontpage, split into sections
  *
@@ -11,12 +11,12 @@
  *
  * @since Function available since Release 1.0.0
  */
-function CertValidator_Hook_frontpage(&$links)
+function X509_Hook_frontpage(&$links)
 {
     assert('is_array($links)');
 
     $links['federation'][] = array(
-        'href' => SimpleSAML_Module::getModuleURL('certvalidator/validate.php'),
+        'href' => SimpleSAML_Module::getModuleURL('x509/validate.php'),
         'text' => array('en' => 'Certvalidator module'),
     );
 }

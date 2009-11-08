@@ -18,14 +18,14 @@ if (!array_key_exists('AuthState', $_REQUEST)) {
 }
 
 if(array_key_exists('SSL_CLIENT_CERT', $_SERVER) && ($_SERVER['SSL_CLIENT_CERT']!=NULL)  ) {
-	$error = sspmod_x509auth_Auth_Source_X509Auth::handleLogin($authStateId, $_SERVER['SSL_CLIENT_CERT']);
+	$error = sspmod_x509_Auth_Source_X509Auth::handleLogin($authStateId, $_SERVER['SSL_CLIENT_CERT']);
 }else {
 	$error = "no_cert_provided";
 }
 
 
 //Login Page
-$t = new SimpleSAML_XHTML_Template($config, 'x509auth:temp-login.php', 'x509auth:dict-x509auth'); //(configuracion, template, diccionario)
+$t = new SimpleSAML_XHTML_Template($config, 'x509:temp-login.php', 'x509:dict-x509');
 $t->data['header'] = 'simpleSAMLphp: CertValidator login';
 $t->data['stateparams'] = array('AuthState' => $authStateId);
 $t->data['error'] = $error;
