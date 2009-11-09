@@ -113,8 +113,8 @@ $lang = array(
 	),
 
 	'error_found_18' => array (
-		'en' => 'Self signed certificate.Unable to get certificate CRL.',
-		'es' => 'Certificado autofirmado.No se pudo obtener el certificado CRL.',
+		'en' => 'Self signed certificate. Unable to get certificate CRL.',
+		'es' => 'Certificado autofirmado. No se pudo obtener el certificado CRL.',
 	),
 
 	'error_found_19' => array (
