@@ -136,7 +136,7 @@ class sspmod_x509_Utilities {
 		if(preg_match('/error ([0-9]+) at/', $output, $matches)) {
 			return 'error_found_' . $matches[1];
 		}
-		return 'patata';
+		return 'error';
 	}
 
 	public static function getAttributesFromCert($certificate, &$attributes) {
