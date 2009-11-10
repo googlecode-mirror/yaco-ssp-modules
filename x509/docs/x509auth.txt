@@ -93,8 +93,8 @@ been revocated. The `crlpath` parameter is a directory where you store the
 CRLs that you have previously downloaded, probably using a crontab job.
 
 
-`Renaming/adding certificates`
-------------------------------
+`Renaming/adding attributes`
+----------------------------
 
 SimpleSAMLphp authentication filters only work when the authentication source
 is used by an IdP and the attributes are sent to a SP. But sometimes you
