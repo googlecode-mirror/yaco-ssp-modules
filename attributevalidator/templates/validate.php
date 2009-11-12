@@ -1,9 +1,4 @@
 <?php
-if(array_key_exists('header', $this->data)) {
-	if($this->getTag($this->data['header']) !== NULL) {
-		$this->data['header'] = $this->t($this->data['header']);
-	}
-}
 
 $this->data['head'] = '<link rel="stylesheet" type="text/css" href="/' . $this->data['baseurlpath'] . 'module.php/attributevalidator/css/attributevalidator.css" />';
 $this->includeAtTemplateBase('includes/header.php');

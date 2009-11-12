@@ -25,8 +25,8 @@ if ($session->isValid($authsource)) {
 unset($_POST); //Show the languages bar if reloaded
 
 //Login Page
-$t = new SimpleSAML_XHTML_Template($config, 'attributevalidator:validate.php', 'attributevalidator:attributevalidator'); //(configuracion, template, diccionario)
-$t->data['header'] = 'Validación de atributos SimpleSAML';
+$t = new SimpleSAML_XHTML_Template($config, 'attributevalidator:validate.php', 'attributevalidator:attributevalidator');
+$t->data['header'] = $t->t('page_header');;
 $t->data['remaining'] = $session->remainingTime();
 $t->data['sessionsize'] = $session->getSize();
 $t->data['attributes'] = sspmod_attributevalidator_AttributeValidator::validateAttributes($attributes);

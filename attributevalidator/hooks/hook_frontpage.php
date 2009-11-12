@@ -14,7 +14,7 @@ function AttributeValidator_Hook_frontpage(&$links)
 
 	$links['federation'][] = array(
 		'href' => SimpleSAML_Module::getModuleURL('attributevalidator/validate.php'),
-		'text' => array('en' => 'Attribute validator module'),
+		'text' => array('en' => 'Attribute validator module', 'es' => 'Módulo de validación de atributos'),
 	);
 }
 ?>

@@ -6,6 +6,11 @@ $lang = array(
 		'es' => '',
 	),
 
+	'page_header' => array (
+		'en' => 'SimpleSAML attribute validation',
+		'es' => 'Validación de atributos SimpleSAML',
+	),
+
 	'header' => array (
 		'en' => 'Attributes',
 		'es' => 'Atributos',
