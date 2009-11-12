@@ -98,7 +98,19 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 		$st = $db->prepare($this->query);
 		$res = $st->execute(array('uidfield' => $originalAttributes[$uidfield][0]));
 
-		return $st->fetch(PDO::FETCH_ASSOC);
+                $db_res = $st->fetchAll(PDO::FETCH_ASSOC);
+
+                $result = array();
+                foreach($db_res as $tuple) {
+                    foreach($tuple as $colum => $value) {
+                        $result[$colum][] = $value;
+                    }
+                }
+                foreach($result as $colum => $data) {
+                    $result[$colum] = array_unique($data);
+                }
+
+                return $result;
 	}
 
 
