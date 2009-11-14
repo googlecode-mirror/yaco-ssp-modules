@@ -11,5 +11,6 @@ $config = array (
     'protocol' => 'http',
     'secret' => 'WebCTSSO',
     'initial_url' => '/webct/viewMyWebCT.dowebct',
+    'policy' => array('create_user','enroll_user_section'),
 );
 
