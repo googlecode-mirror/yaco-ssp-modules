@@ -4,7 +4,7 @@
  *
  * @param array &$croninfo  Output
  */
-function certvalidator_hook_cron(&$croninfo) {
+function x509_hook_cron(&$croninfo) {
 	assert('is_array($croninfo)');
 	assert('array_key_exists("summary", $croninfo)');
 	assert('array_key_exists("tag", $croninfo)');
