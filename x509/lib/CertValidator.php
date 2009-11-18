@@ -26,12 +26,11 @@ class sspmod_x509_CertValidator {
 	}
 
 
-	public static function validateCert($pem) {
+	public static function validateCert($pem, $crl_validation=true) {
 		$config = SimpleSAML_Configuration::getInstance();
 		$autoconfig = $config->copyFromBase('certvalidator', 'config-certvalidator.php');
 
 		$capath = $autoconfig->getValue('capath');
-		$crlpath = $autoconfig->getValue('crlpath');
 
 		if(strpos($pem, "-----BEGIN CERTIFICATE-----") === FALSE) {
 $pem = <<<CERTEOT
@@ -39,9 +38,14 @@ $pem = <<<CERTEOT
 $pem
 -----END CERTIFICATE-----
 CERTEOT;
-			}
-
-		$result = sspmod_x509_Utilities::validateCertificateWithCRL($pem, $capath, $crlpath);
+		}
+		if($crl_validation) {
+			$crlpath = $autoconfig->getValue('crlpath');
+			$result = sspmod_x509_Utilities::validateCertificateWithCRL($pem, $capath, $crlpath);
+		}
+		else {
+			$result = sspmod_x509_Utilities::validateCertificate($pem, $capath);
+		}
 
 		if($result[0]) {
 			return "cert_validation_success";

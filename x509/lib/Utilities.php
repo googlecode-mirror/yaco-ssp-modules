@@ -75,6 +75,26 @@ class sspmod_x509_Utilities {
 		return $result;
 	}
 
+
+	public static function validateCertificate($certificate, $capath) {
+		assert('is_string($certificate)');
+		assert('is_string($capath)');
+
+		if (!is_dir($capath)) {
+			throw new Exception('Could not find CAs dir: ' . $capath);
+		}
+
+		$cmdoptions = array(
+			'-CApath', $capath,
+			);
+		$result = self::opensslExec('verify', $certificate, $cmdoptions);
+		if ($result[0] !== 0 || $result[1] !== 'stdin: OK\n') {
+			return array(False,self::parseVerifyError($result[1]));
+		}
+
+		return array(True,'');
+	}
+
 	public static function validateCertificateWithCRL($certificate, $capath, $crlpath) {
 		assert('is_string($certificate)');
 		assert('is_string($capath)');
@@ -93,9 +113,9 @@ class sspmod_x509_Utilities {
 			'-crl_check',
 			);
 		$result = self::opensslExec('verify', $certificate, $cmdoptions);
-                if ($result[0] !== 0 || $result[1] !== 'stdin: OK\n') {
-                        return array(False,self::parseVerifyError($result[1]));
-                }
+			if ($result[0] !== 0 || $result[1] !== 'stdin: OK\n') {
+				return array(False,self::parseVerifyError($result[1]));
+			}
 
 		return array(True,'');
 	}
