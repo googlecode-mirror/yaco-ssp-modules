@@ -25,7 +25,7 @@ if(array_key_exists('x509Cert', $_POST) && ($_POST['x509Cert']!=NULL)  ) {
 unset($_POST); //Show the languages bar if reloaded
 
 //Login Page
-$t = new SimpleSAML_XHTML_Template($config, 'x509:validate.php', 'x509:certvalidator');
+$t = new SimpleSAML_XHTML_Template($config, 'x509:validate.php', 'x509:x509');
 $t->data['header'] = 'simpleSAMLphp: CertValidator login';
 $t->data['stateparams'] = array('AuthState' => $authStateId);
 $t->data['x509Cert'] = $x509Cert;

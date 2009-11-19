@@ -25,7 +25,7 @@ if(array_key_exists('SSL_CLIENT_CERT', $_SERVER) && ($_SERVER['SSL_CLIENT_CERT']
 
 
 //Login Page
-$t = new SimpleSAML_XHTML_Template($config, 'x509:temp-login.php', 'x509:dict-x509');
+$t = new SimpleSAML_XHTML_Template($config, 'x509:temp-login.php', 'x509:x509');
 $t->data['header'] = 'simpleSAMLphp: CertValidator login';
 $t->data['stateparams'] = array('AuthState' => $authStateId);
 $t->data['error'] = $error;
