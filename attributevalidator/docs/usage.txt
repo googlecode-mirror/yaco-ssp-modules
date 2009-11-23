@@ -1,0 +1,74 @@
+Overview
+========
+
+This module checks the attributes present in the schema returned by an IdP and
+classify them as required, recommended, optional or unknown, depending on the
+configuration. An schema is considered valid if all required attributes are
+present in the schema.
+
+Basic configuration
+===================
+
+To configure this module copy config-templates/config-attributevalidator.php in
+the config directory of your SimpleSAMLPHP installation and modify it depending
+on the authentication you want to use and the attributes in your schema.
+
+Example
+=======
+
+In the following example the validator is configured to authenticate via the
+"saml" source defined in the authsources.php config file and classify the
+attributes found according to the three attribute arrays given.
+
+<?php
+
+$config = array (
+   	'auth' => 'saml',
+	'required_attrs' => array (
+		'givenName', 'cn', 'sn', 'schacSn1', 'schacSn2', 'displayName',
+		'irisMailMainAddress', 'eduPersonScopedAffiliation',
+		'eduPersonAffiliation', 'eduPersonPrimaryAffiliation',
+		'eduPersonPrincipalName', 'eduPersonOrgDN',
+		'schacPersonalUniqueID',
+	),
+	'recommended_attrs' => array (
+		'irisMailAlternateAddress', 'mail', 'schacUserPresenceID',
+		'irisClassifCode', 'schacUserStatus',
+		'eduPersonEntitlement', 'irisUserEntitlement',
+		'schacUserPrivateAttribute', 'schacPersonalUniqueCode',
+	),
+	'optional_attrs' => array (
+		'schacMotherTonge', 'schacGender', 'chacDateOfBirth',
+		'schacPlaceOfBirth', 'schacCountryOfCitizenship',
+		'jpegPhoto', 'eduPersonNickname', 'schacPersonalTitle',
+		'title', 'preferredLanguage', 'schacYearOfBirth',
+		'postalAddress', 'homePostalAddress', 'street', 'l',
+		'postalCode', 'mobile', 'homePhone', 'telephoneNumber',
+		'fax', 'schacCountryOfResidence', 'eduPersonAssurance',
+		'userCertificate', 'userSMIMECertificate',
+		'irisPublicKey', 'uid', 'o', 'ou', 'labeledURI',
+		'description', 'seeAlso',
+	),
+);
+
+?>
+
+If any of the required attributes is not present, the schema will be marked as
+invalid. Not present recommended or optional attributes do not affect the
+validity of the schema.
+
+Attributes found in the schema but not present in the configuration arrays are
+classified as unknown.
+
+Configuration Options explained
+===============================
+
+The filter needs the following options:
+
+- auth: the authentication source as defined in simplesaml's authsources.php.
+- required_attrs: array of attributes that must be all present for the schema
+  to be valid.
+- recommended_attrs: array of recommended attributes that should be present,
+  but are not enforced for the schema to be valid.
+- optional_attrs: array of optional attributes that may or may not be present,
+  it doesn't affect the validity of the schema.
