@@ -71,11 +71,14 @@ function present_attributes_table($t, $attributes, $nameParent, $color_missing_r
 				}
 				$str .= '</ul></td></tr>';
 			} else {
+				if(is_array($value)) {
+					$value = array_shift($value);
+				}
 				$str .= '<tr class="' . $alternate[($i++ % 2)] . ' ' . $missingImg . ' ' . $color_row . '"><td class="attrmissing rightWhite"><img src="'. $imgPath . $missingImg . '.png" alt="' . $missingMsg . '" /></td><td class="attrname rightWhite">' . htmlspecialchars($name) . '</td>';
 				if ($nameraw === 'jpegPhoto') {
-					$str .= '<td class="attrvalue"><img src="data:image/jpeg;base64,' . htmlspecialchars($value[0]) . '" /></td></tr>';
+					$str .= '<td class="attrvalue"><img src="data:image/jpeg;base64,' . htmlspecialchars($value) . '" /></td></tr>';
 				} else {
-					$str .= '<td class="attrvalue">' . htmlspecialchars($value[0]) . '</td></tr>';
+					$str .= '<td class="attrvalue">' . htmlspecialchars($value) . '</td></tr>';
 				}
 			}
 		}

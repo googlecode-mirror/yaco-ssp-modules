@@ -6,6 +6,16 @@ $myconfig = SimpleSAML_Configuration::getConfig('config-attributevalidator.php')
 
 $authsource = $myconfig->getValue('auth', 'login-admin');
 
+
+$SPMetadata = array();
+
+if(isset($_REQUEST['token'])) {
+	$SPMetadata['token'] = $_REQUEST['token'];
+}
+if(isset($_REQUEST['mail'])) {
+	$SPMetadata['mail'] = $_REQUEST['mail'];
+}
+
 if ($session->isValid($authsource)) {
     $attributes = $session->getAttributes();
 } else {
@@ -14,10 +24,7 @@ if ($session->isValid($authsource)) {
         SimpleSAML_Utilities::selfURL(),
         NULL,
         array(
-            'SPMetadata' => array(
-                'token' => $_REQUEST['token'],
-                'mail' => $_REQUEST['mail']
-            )
+            'SPMetadata' => $SPMetadata
         )
     );
 }
