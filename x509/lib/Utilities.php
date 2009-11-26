@@ -37,7 +37,7 @@ class sspmod_x509_Utilities {
 		while (!feof($pipes[1])) {
 			$line = trim(fgets($pipes[1]));
 			if(strlen($line) > 0) {
-				$out .= $line . '\n';
+				$out .= $line . "\n";
 			}
 		}
 		fclose($pipes[1]);
@@ -145,6 +145,29 @@ class sspmod_x509_Utilities {
                 }
 
 		return array(True, '');
+	}
+
+	public static function getDaysUntilExpiration($certificate) {
+		assert('is_string($certificate)');
+
+		$cmdoptions = array(
+			'-enddate',
+			'-noout',
+			);
+		$result = self::opensslExec('x509', $certificate, $cmdoptions);
+                if ($result[0] !== 0 || preg_match('/notAfter=.*/', $result[1]) === 0) {
+			throw new Exception('Unable to get certificate expiration date');
+                }
+		if(preg_match('/notAfter=(.*)\n/', $result[1], $matches)) {
+			$expires = strtotime($matches[1]);
+			$now = strtotime("now");
+			$until = $expires - $now;
+			if ($until < 0) { 
+				return 0; // certificate already expired
+                        }
+			return floor($until/86400);
+		}
+		return -1; // Error processing date
 	}
 
 	public static function parseVerifyError($output) {
