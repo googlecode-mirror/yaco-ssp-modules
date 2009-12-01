@@ -47,8 +47,7 @@ function x509_hook_cron(&$croninfo) {
 				else {
 					$hash = substr($result[1], 0, 8);
 					exec('ln -s '.$crlpath.'/'.$filename.' '.$crlpath.'/'.$hash.'.r0');
-                    $croninfo['summary'][] = 'Updated crl from: '.$crlurl.' '.$hash;
-                    $croninfo['summary'][] = 'ln -s '.$crlpath.'/'.$filename.' '.$crlpath.'/'.$hash.'.r0';
+					$croninfo['summary'][] = 'Updated crl from: '.$crlurl;
 				}
 			}
 			
