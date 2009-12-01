@@ -113,7 +113,7 @@ class sspmod_x509_Utilities {
 			'-crl_check',
 			);
 		$result = self::opensslExec('verify', $certificate, $cmdoptions);
-			if ($result[0] !== 0 || $result[1] !== 'stdin: OK\n') {
+			if ($result[0] !== 0 || preg_match('/stdin: OK(.*)/', $result[1]) === 0) {
 				return array(False,self::parseVerifyError($result[1]));
 			}
 
@@ -140,9 +140,9 @@ class sspmod_x509_Utilities {
 			);
 		$result = self::opensslExec('ocsp', $certificate, $cmdoptions);
 		unlink($issuer_cert_path);
-                if ($result[0] !== 0 || preg_match('/\/dev\/stdin: good.*/', $result[1]) === 0) {
-		    return array(False,self::parseVerifyError($result[1]));
-                }
+		if ($result[0] !== 0 || (preg_match('/\/dev\/stdin: good.*/', $result[1]) === 0)) {
+			return array(False,self::parseVerifyError($result[1]));
+		}
 
 		return array(True, '');
 	}
@@ -176,7 +176,7 @@ class sspmod_x509_Utilities {
 		if(!preg_match('/^stdin:/', $output)) {
 			return 'unable_to_load';
 		}
-		if(preg_match('/error ([0-9]+) at/', $output, $matches)) {
+		else if(preg_match('/error ([0-9]+) at/', $output, $matches)) {
 			return 'error_found_' . $matches[1];
 		}
 		return 'error';

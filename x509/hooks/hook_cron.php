@@ -33,13 +33,13 @@ function x509_hook_cron(&$croninfo) {
 					$croninfo['summary'][] = 'Error when accesing the url: '.$crlurl;
 					continue;
 				}
-				$result = sspmod_certvalidator_Utilities::convertCRL($crl_data, $crlpath, $filename);
+				$result = sspmod_x509_Utilities::convertCRL($crl_data, $crlpath, $filename);
 				if($result[0]) {
 					$croninfo['summary'][] = 'Error procesing CRL (convert to PEM): '.$crlurl;
 					continue;
 				}
 				$crl_data = file_get_contents($crlpath.'/'.$filename);
-				$result = sspmod_certvalidator_Utilities::rehash($crl_data, $crlpath, $filename);
+				$result = sspmod_x509_Utilities::rehash($crl_data, $crlpath, $filename);
 				if($result[0]) {
 					$croninfo['summary'][] = 'Error procesing CRL (obtaining hash): '.$filename;
 					continue;
@@ -47,12 +47,14 @@ function x509_hook_cron(&$croninfo) {
 				else {
 					$hash = substr($result[1], 0, 8);
 					exec('ln -s '.$crlpath.'/'.$filename.' '.$crlpath.'/'.$hash.'.r0');
+                    $croninfo['summary'][] = 'Updated crl from: '.$crlurl.' '.$hash;
+                    $croninfo['summary'][] = 'ln -s '.$crlpath.'/'.$filename.' '.$crlpath.'/'.$hash.'.r0';
 				}
 			}
+			
 		}
 
 	} catch (Exception $e) {
-		print_r($e->getMessage());
 		$croninfo['summary'][] = 'Error during certvalidator sync crl list: ' . $e->getMessage();
 	}
 }
