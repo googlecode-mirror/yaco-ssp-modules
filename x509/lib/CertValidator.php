@@ -26,31 +26,47 @@ class sspmod_x509_CertValidator {
 	}
 
 
-	public static function validateCert($pem, $crl_validation=true) {
+	public static function validateCert($cert, $crl_validation=true) {
 		$config = SimpleSAML_Configuration::getInstance();
 		$autoconfig = $config->copyFromBase('certvalidator', 'config-certvalidator.php');
 
 		$capath = $autoconfig->getValue('capath');
 
-		if(strpos($pem, "-----BEGIN CERTIFICATE-----") === FALSE) {
-$pem = <<<CERTEOT
+		if(strpos($cert, "-----BEGIN CERTIFICATE-----") === FALSE) {
+$cert = <<<CERTEOT
 -----BEGIN CERTIFICATE-----
-$pem
+$cert
 -----END CERTIFICATE-----
 CERTEOT;
 		}
 		if($crl_validation) {
 			$crlpath = $autoconfig->getValue('crlpath');
-			$result = sspmod_x509_Utilities::validateCertificateWithCRL($pem, $capath, $crlpath);
+			$result = sspmod_x509_Utilities::validateCertificateWithCRL($cert, $capath, $crlpath);
 		}
 		else {
-			$result = sspmod_x509_Utilities::validateCertificate($pem, $capath);
+			$result = sspmod_x509_Utilities::validateCertificate($cert, $capath);
 		}
 
 		if($result[0]) {
 			return "cert_validation_success";
 		} else {
 			return $result[1];
+		}
+	}
+	
+	public static function getDaysUntilExpiration($cert) {
+		if(strpos($cert, "-----BEGIN CERTIFICATE-----") === FALSE) {
+$cert = <<<CERTEOT
+-----BEGIN CERTIFICATE-----
+$cert
+-----END CERTIFICATE-----
+CERTEOT;
+		}
+		try {
+			return sspmod_x509_Utilities::getDaysUntilExpiration($cert);
+		}
+		catch (Exception $e){
+			return -1;
 		}
 	}
 }
