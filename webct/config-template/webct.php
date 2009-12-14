@@ -6,11 +6,12 @@
 $config = array (
 	'auth' => 'saml',
 	'useridattr' => 'eduPersonPrincipalName',
-    'host' => 'localhost',
-    'port' => '8280',
-    'protocol' => 'http',
+    'courses_enrollments_attr' => 'schacUserStatus',
+    'webct_base_url' => 'http://localhost:8280/webct/';
     'secret' => 'WebCTSSO',
-    'initial_url' => '/webct/viewMyWebCT.dowebct',
+    'initial_url' => 'viewMyWebCT.dowebct',
     'policy' => array('create_user','enroll_user_section'),
+    'course_pattern' => 'urn:mace:terena.org:schac:userStatus:es:campusandaluzvirtual.es:(.*):(.*):(.*):(.*)',
+
 );
 
