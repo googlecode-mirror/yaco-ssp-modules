@@ -61,7 +61,7 @@ function present_attributes_table($t, $attributes, $nameParent, $color_missing_r
 			}
 		} else {
 			if (sizeof($value) > 1) {
-				$str .= '<tr class="' . $alternate[($i++ % 2)] . ' ' . $missingImg . ' ' . $color_row . '"><td class="attrmissing rightWhite"><span class="img'. $missingImg . '"/></td><td class="attrname  rightWhite">' . htmlspecialchars($name) . '</td><td class="attrvalue"><ul>';
+				$str .= '<tr class="' . $alternate[($i++ % 2)] . ' ' . $missingImg . ' ' . $color_row . '"><td class="attrmissing rightWhite"><img src="' . $imgPath . $missingImg . '.png" alt="' . $missingMsg . '"/></td><td class="attrname  rightWhite">' . htmlspecialchars($name) . '</td><td class="attrvalue"><ul>';
 				foreach ($value AS $listitem) {
 					if ($nameraw === 'jpegPhoto') {
 						$str .= '<li><img src="data:image/jpeg;base64,' . $listitem . '" /></li>';
