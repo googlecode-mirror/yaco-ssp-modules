@@ -1,7 +1,20 @@
 <?php
 /* WebCT SSO and on-the-fly provisioning
 Dependencies: php curl support
+DSN for Oracle:
+// Connect to a database defined in tnsnames.ora
+oci:dbname=mydb
+
+// Connect using the Oracle Instant Client
+oci:dbname=//localhost:1521/mydb
 */
+
+/*  TODO:
+ - Asserts of config at __construct time
+ - Error message if course code non-existent in LMS (ims import fails)
+ - refactor
+*/
+
 
 define("WEBCT_SI_URL", "systemIntegrationApi.dowebct");
 define("WEBCT_SSO_URL", "public/autosignon");
@@ -14,7 +27,8 @@ class WebCT_Login_Provisioning
     var $url = '';
 
     function __construct(){
-        $config = SimpleSAML_Configuration::getConfig('webct.php');
+        $config = SimpleSAML_Configuration::getConfig('config-webct.php');
+        // Basic params for WebCT SSO
         $this->authsource = $config->getValue('auth', 'saml');
         $this->webct_base_url = $config->getValue('webct_base_url');
         $this->secret = $config->getValue('secret', '');
@@ -22,12 +36,68 @@ class WebCT_Login_Provisioning
             'viewMyWebCT.dowebct');
         $this->userid_attr = $config->getValue(
             'userid_attr', 'eduPersonPrincipalName');
+        // User provisioning params
+        $this->sn_attr = $config->getValue('sn_attr', 'sn');
+        $this->givenName_attr = $config->getValue('givenName_attr',
+            'givenName');
+        $this->mail_attr = $config->getValue('mail_attr', 'mail');
+        // course data
         $this->courses_enrollments_attr = $config->getValue(
             'courses_enrollments_attr', 'schacUserStatus');
         $this->course_pattern = $config->getValue(
-            'course_pattern', '(.*):(.*):(.*):(.*)');
+            'course_pattern', '(?P<code>.*):(?P<period>.*):(?P<role>.*):(?P<status>.*)');
 
+        // course code translation
+        $this->default_source = $config->getValue('default_source', 'WebCT');
+        $course_map_mode =$config->getValue('course_map_mode', NULL);
+        if ($course_map_mode == 'sql'){
+            $dsn =$config->getValue('dsn');
+            $dbuser =$config->getValue('dbuser');
+            $dbpassword =$config->getValue('dbpassword');
+            $sql =$config->getValue('sql');
+            if (empty($dsn) || empty($dbuser) || empty($sql))
+                throw new SimpleSAML_Error_Exception("Missing or empty 'dsn', 'dbuser' or 'sql' "
+                    ."for course_map_mode 'sql' in webct.php configuration.");
+            $this->dsn = $dsn;
+            $this->dbuser = $dbuser;
+            $this->dbpassword = $dbpassword;
+            $this->sql = $sql;
+            $this->course_map = $this->load_sql_course_map();
+        } elseif ($course_map_mode == 'map'){
+            $map = $config->getValue('course_map');
+            if (empty($map))
+                throw new Exception("Missing or empty 'course_map' "
+                    ."for course_map_mode 'map' in webct.php configuration.");
+            $this->course_map = $map;
+        }
+        $this->course_map_mode = $course_map_mode;
+        // role and status translation maps
+        $this->role_map = $config->getValue('role_map');
+        $this->status_map = $config->getValue('status_map');
     }
+
+
+    /* Load course map from sql */
+    function load_sql_course_map(){
+        $session = SimpleSAML_Session::getInstance();
+        $map = $session->getData('course_map','course_map');
+        $map = array();
+
+        if (empty($map)){
+            $map = array();
+            $dbh = new PDO($this->dsn, $this->dbuser, $this->dbpassword);
+            foreach ($dbh->query($this->sql) as $row){
+                $map[$row['CODE'].':'.$row['PERIOD']] = array(
+                    'source' => (empty($row['IMS_SOURCE']) ? $this->default_source :
+                        $row['IMS_SOURCE']),
+                    'id' => $row['IMS_ID']);
+            }
+            $session->setData('course_map', 'course_map', $map, 3*60);
+        }
+        return $map;
+    }
+
+
 
     /* Calculate checksum of a string */
     function chksum($string){
@@ -113,9 +183,9 @@ class WebCT_Login_Provisioning
     }
 
     function create_user($username, $attributes){
-        $sn = array_key_exists('sn', $attributes) ? $attributes['sn'][0] : $attributes['surname'][0];
-        $gn = array_key_exists('gn', $attributes) ? $attributes['gn'][0] : $attributes['givenName'][0];
-        $mail = $attributes['mail'][0];
+        $sn = $attributes[$this->sn_attr][0];
+        $gn = $attributes[$this->givenName_attr][0];
+        $mail = $attributes[$this->mail_attr][0];
         $gen_date = date(DATE_ISO8601);
         $xml = "
             <person>
@@ -144,6 +214,7 @@ class WebCT_Login_Provisioning
     }
 
     function get_enrollments($lc_source, $lc_id, $user_source, $user_id){
+        // TODO: still not working
         $params = array(
             'action' => 'export',
             'option' => 'group_record',
@@ -196,8 +267,7 @@ class WebCT_Login_Provisioning
         return $res;
     }
 
-    function enroll_ims($username, $course_section_ims_source,
-            $course_section_ims_id){
+    function enroll_user($username, $webct_courses){
         $res = $this->get_person_ims_source($username);
         if ($res == NULL)
             throw new Exception("User $username unknown in WebCT.");
@@ -208,39 +278,46 @@ class WebCT_Login_Provisioning
             'option' => 'restrict',
             'webctid' => $username,
         );
-        // status = 1=active, 2=inactive
-        $status=1;
+        // status = 1=active, 0=inactive
         // recstatus = 1=add, 2=edit, 3=delete
         $recstatus = 1;
-        // recstatus ignored (1 if doesn't exist, 2 if exists)
-        //   problem: is access denied from WebCT GUI, grants access again.
-        // roletype = 01=student, 02=instructor, 03=designer/content developer
+        // recstatus ignored (1 add, 2 update, default add if doesn't exist, else update)
         // subrole student: AUD=auditor
         // subrole instructor: Subordinate=Non-primary section instructor
         // subrole instructor: TA=Teaching assistant
-        $role = "01";
-        $subrole = "";
-
         $gen_date = date(DATE_ISO8601);
-        $xml = "
-            <membership>
-                <sourcedid>
-                    <source>$course_section_ims_source</source>
-                    <id>$course_section_ims_id</id>
-                </sourcedid>
-                <member>
+        $xml = "";
+        foreach ($webct_courses as $course){
+            $ims_source = $course['ims_source'];
+            $course_section_ims_source = $ims_source['source'];
+            $course_section_ims_id = $ims_source['id'];
+            $subrole = '';
+            $role = $course['role'];
+            if (is_array($role)){
+                $subrole = $role[1];
+                $role = $role[0];
+            }
+            $status = $course['status'];
+            $xml .= "
+                <membership>
                     <sourcedid>
-                        <source>$user_ims_source</source>
-                        <id>$user_ims_id</id>
+                        <source>$course_section_ims_source</source>
+                        <id>$course_section_ims_id</id>
                     </sourcedid>
-                    <idtype>1</idtype>
-                    <role roletype=\"$role\">
-                        <subrole>$subrole</subrole>
-                        <status>$status</status>
-                        <userid>$username</userid>
-                    </role>
-                </member>
-            </membership>";
+                    <member>
+                        <sourcedid>
+                            <source>$user_ims_source</source>
+                            <id>$user_ims_id</id>
+                        </sourcedid>
+                        <idtype>1</idtype>
+                        <role roletype=\"$role\">
+                            <subrole>$subrole</subrole>
+                            <status>$status</status>
+                            <userid>$username</userid>
+                        </role>
+                    </member>
+                </membership>";
+        }
 
         $body = $this->siapi_call('ims', $params, $xml);
         if (strstr($body, "success") == FALSE)
@@ -264,6 +341,65 @@ class WebCT_Login_Provisioning
             $this->urlencode_params($params);
         return $url;
     }
+
+    /* Translate attribute values into local LMS courses */
+    function translate_course_array($courses){
+        // translate 'urn:tenena.org:schacStatus....' into something more userful
+        $webct_courses = array();
+        foreach ($courses as $course){
+            $pattern = '|' . $this->course_pattern . '|';
+            $count = preg_match($pattern, $course, $found) ;
+            /* if not found, just ignore values */
+            if ($count>0){
+                $code = $found['code'];
+                $period = $found['period'];
+                $role = $this->translate_role($found['role']);
+                $status = $this->translate_status($found['status']);
+                $res = $this->translate_course_code($code, $period);
+                if (!empty($res)){
+                    $ims_source = $res['source'];
+                    $ims_id = $res['id'];
+                    $webct_courses[] = array('ims_source' => $res, 'role' => $role, 'status' => $status);
+                }
+            }
+        }
+        return $webct_courses;
+    }
+
+    /* Translate user status. */
+    function translate_status($status){
+        $status = strtolower($status);
+        if (!array_key_exists($status, $this->status_map))
+            throw new Exception("Invalid status '$status' for webct ".
+                " connector. Not in status_map.");
+        return $this->status_map[$status];
+    }
+
+    /* Translate user status. */
+    function translate_role($role){
+        if (!array_key_exists($role, $this->role_map))
+            throw new Exception("Invalid role '$role' for webct ".
+                " connector. Not in role_map.");
+        return $this->role_map[$role];
+    }
+
+    /* Translate course, period to ims source & id.
+       Returs: array('source' => ims_source, 'id' => ims_id)
+    */
+    function translate_course_code($code, $period){
+        if (!empty($this->course_map_mode)){
+            $key = "$code:$period";
+            if (array_key_exists($key, $this->course_map)){
+                $res = $this->course_map[$key];
+                $source = $res['source'];
+                $id = $res['id'];
+            }
+        } else {
+            $source = $this->default_source;
+            $id = $code;
+        }
+        return array('source' => $source, 'id' => $id);
+    }
 }
 
 $config = SimpleSAML_Configuration::getInstance();
@@ -281,7 +417,12 @@ if ($session->isValid($webct->authsource)) {
         SimpleSAML_Utilities::selfURL());
 };
 
-// get automatic sign-on URL from WebCT for the user.
+// get if user enrollments
+$courses = $attributes[$webct->courses_enrollments_attr];
+$webct_courses = $webct->translate_course_array($courses);
+if (empty($webct_courses))
+    throw new Exception("No dispone de acceso a cursos en esta plataforma!");
+
 $url = $webct->get_sso_url($userid);
 if ($url == FALSE){
     // if user doesn't exist, create it
@@ -289,27 +430,11 @@ if ($url == FALSE){
     if ($res == TRUE)
         $url = $webct->get_sso_url($userid);
     else
-        throw new Exception("Can't create user: $userid in WebCT!");
+        throw new Exception("No se puede crear usuario en esta plataforma: $userid !");
 }
-// check if user enrollments
-$courses = $attributes[$webct->courses_enrollments_attr];
 
-
-foreach ($courses as $course){
-    // translate course to ims source & id
-    $pattern = '|' . $webct->course_pattern . '|';
-    $count = preg_match($pattern, $course, $found) ;
-    if (!empty($found)){
-        $course_code = $found[1];
-        $course_period = $found[2];
-        $course_role = $found[3];
-        $course_status = $found[4];
-        $ims_source = 'WebCT';
-        $ims_id = $course_code; // WebCT course section
-
-        // enroll user in course (section)
-        $webct->enroll_ims($userid, $ims_source, $ims_id);
-    }
-}
+// enroll user in course sections
+$webct->enroll_user($userid, $webct_courses);
+// get automatic sign-on URL from WebCT for the user.
 
 header("Location: $url");

@@ -24,7 +24,7 @@ $config = array(
             'sn' => 'TestUser',
             'mail' => 'user1@example.org',
             'schacUserStatus' => array(
-                'urn:mace:terena.org:schac:userStatus:es:campusandaluzvirtual.es:TCS1:2009:student:active',
+                'urn:mace:terena.org:schac:userStatus:es:campusandaluzvirtual.es:12345678:2009:student:active',
             ),
 		),
 		'user2:user2' => array(
@@ -36,7 +36,7 @@ $config = array(
             'gn' => 'User 2',
             'sn' => 'TestUser',
             'schacUserStatus' => array(
-                'urn:mace:terena.org:schac:userStatus:es:campusandaluzvirtual.es:TCS1:2009:student:active',
+                'urn:mace:terena.org:schac:userStatus:es:campusandaluzvirtual.es:87654321:2009:student:active',
             ),
 		),
 	),
