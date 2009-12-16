@@ -13,13 +13,14 @@ oci:dbname=//localhost:1521/mydb
  - Asserts of config at __construct time
  - Error message if course code non-existent in LMS (ims import fails)
    refactor
- - Better 403 message if no courses for user.
+ - Allow configure 403 redirect page.
  - If course provisioning fails, e.g., some data is incorrect, SSO fails.
    Should be more solid, display an error and let user proceed.
  - Still no logout / single logout
  - Use singleton for this class?
  - The course code mapping is loaded for each user, is it possible to
    share it? (e.g. memcached, etc.)
+ - Load mapping only if we need to provision.
 */
 
 
@@ -188,6 +189,8 @@ class sspmod_webct_Connector
         curl_close($ch);
         if (!empty($filepath))
             unlink($filepath);
+        if ($response === FALSE)
+            throw new Exception("Error en la comunicación con WebCT.");
         return $response;
     }
 
@@ -217,7 +220,7 @@ class sspmod_webct_Connector
             'option' => 'restrict',
         );
         $body = $this->siapi_call('ims', $params, $xml);
-        if (strstr($body, "success") == FALSE)
+        if ($body === FALSE || strstr($body, "success") == FALSE)
             return FALSE;
         return TRUE;
     }
@@ -249,13 +252,17 @@ class sspmod_webct_Connector
             'webctid' => $username,
         );
         $body = $this->siapi_call('standard', $params);
-        // strip the XML tags
-        $count = preg_match('/<consortiaid>(.*)<\/consortiaid>/',
-            $body, $found);
-        if($count==false || $count==0)
-            exit("No tag consortiaid found. Response was: $body");
-        $consortia_id = $found[1];
-        return $consortia_id;
+        if ($body !== FALSE){
+            // strip the XML tags
+            $count = preg_match('/<consortiaid>(.*)<\/consortiaid>/',
+                $body, $found);
+            if(!empty($found))
+                $consortia_id = $found[1];
+            if ($consortia_id != "null")
+                return $consortia_id;
+        }
+        return FALSE;
+
     }
 
     function get_person_ims_source($username){
@@ -269,7 +276,7 @@ class sspmod_webct_Connector
         $pattern = '|<sourcedid><source>(.*)</source><id>(.*)</id></sourcedid>|';
         $count = preg_match($pattern, $body, $found);
         if($count==false || $count==0)
-            exit("No ims source found. Response was: $body");
+            throw new Exception("No ims source found. Response was: $body");
         if ($found[1] == 'null')
             return NULL;
         $res = array('source' => $found[1], 'id' => $found[2]);
@@ -337,10 +344,8 @@ class sspmod_webct_Connector
 
     function get_sso_url($username){
         $consortia_id = $this->get_consortia_id($username);
-        if ($consortia_id == 'null'){
+        if ($consortia_id == FALSE)
             return FALSE;
-        }
-
         $params = array(
             'wuui' => $consortia_id,
             'timestamp' => time(),
@@ -357,6 +362,8 @@ class sspmod_webct_Connector
         // translate 'urn:tenena.org:schacStatus....' into something
         // more userful for webct.
         $webct_courses = array();
+        if (empty($courses))
+            return $webct_courses;
         foreach ($courses as $course){
             $pattern = '|' . $this->course_pattern . '|';
             $count = preg_match($pattern, $course, $found) ;

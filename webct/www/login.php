@@ -21,13 +21,14 @@ if (empty($url)){
     $courses = $attributes[$webct->courses_enrollments_attr];
     // translate codes & filter out anything we won't provide
     $webct_courses = $webct->translate_course_array($courses);
-    // check if there is any valid course enrollment
-    if (empty($webct_courses))
-        throw new Exception("No dispone de acceso a cursos " .
-            "en esta plataforma!");
+    // check if user exists (get sso url)
+    $url = $webct->get_sso_url($userid);
+    // if no enrollments and not already user -> 403
+    if (empty($webct_courses) && $url == FALSE){
+        SimpleSAML_Utilities::redirect('./webct_403.php');
+    }
 
     // get automatic sign-on URL from WebCT for the user.
-    $url = $webct->get_sso_url($userid);
     if ($url == FALSE){
         // if user doesn't exist, create it
         $res = $webct->create_user($userid, $attributes);
