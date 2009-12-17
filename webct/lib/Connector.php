@@ -11,6 +11,8 @@ oci:dbname=//localhost:1521/mydb
 
 /*  TODO:
  - Asserts of config at __construct time
+ - Log in syslog what is happening
+ - Raise exception for "Invalid Message Authentication Code"
  - Error message if course code non-existent in LMS (ims import fails)
    refactor
  - Allow configure 403 redirect page.
@@ -177,7 +179,7 @@ class sspmod_webct_Connector
         $ch = curl_init();
         $url = $this->webct_base_url . WEBCT_SI_URL;
         if (!empty($xml)){
-            curl_setopt($ch, CURL_POST, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params_send);
         } else {
             $url .= '?' . $this->urlencode_params($params_send);
@@ -191,6 +193,9 @@ class sspmod_webct_Connector
             unlink($filepath);
         if ($response === FALSE)
             throw new Exception("Error en la comunicación con WebCT.");
+        if ($response == "Invalid Message Authentication Code")
+            throw new Exception("La clave secreta de comunicacion con WebCT "
+                . "es incorrecta.");
         return $response;
     }
 
@@ -256,10 +261,11 @@ class sspmod_webct_Connector
             // strip the XML tags
             $count = preg_match('/<consortiaid>(.*)<\/consortiaid>/',
                 $body, $found);
-            if(!empty($found))
+            if(!empty($found)){
                 $consortia_id = $found[1];
-            if ($consortia_id != "null")
-                return $consortia_id;
+                if ($consortia_id != "null")
+                    return $consortia_id;
+            }
         }
         return FALSE;
 
