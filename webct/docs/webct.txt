@@ -1,0 +1,40 @@
+webct Module
+============
+
+<!--
+	This file is written in Markdown syntax.
+	For more information about how to use the Markdown syntax, read here:
+	http://daringfireball.net/projects/markdown/syntax
+-->
+
+  * Version: `$Id$`
+  * Author: Ernesto Revilla <erny@yaco.es>, Yaco Sistemas
+  * Package: simpleSAMLphp
+
+This module provides a bridge between simpleSAMLphp and Blackboard/WebCT with
+the following features:
+ - Single Sign-On
+ - User provisioning
+ - Course (sections) enrollment (activate and deny access)
+
+May be in future this will not be needed, as newer versions of Weblogic
+already provide SAML 2 access. But until then, this module may me useful for
+people to gain federated identity access to Blackboard / WebCT.
+
+
+`webct`
+: simpleSAMLphp Blackboard/WebCT bridge
+
+
+`webct`
+---------------------
+
+To connect simpleSAMLphp to WebCT follow these steps:
+ * Install and configure simpleSAMLphp >= 1.5
+ * Download this module and place it in you simpleSAMLphp's module dir.
+ * Copy config-templates/config-webct.php to the simpleSAMLphp's config dir.
+ * Edit config-webct.php to suite your needs.
+
+Once configured correctly, direct your browser to:
+http://...../module.php/webct/login.php
+
