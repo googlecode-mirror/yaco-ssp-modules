@@ -72,7 +72,7 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 
 		foreach (array('dsn', 'username', 'password', 'query') as $id) {
 			if (!array_key_exists($id, $config)) {
-				throw new Exception('consent:Database - Missing required option \'' . $id . '\'.');
+				throw new Exception('attributecollector:SQLCollector - Missing required option \'' . $id . '\'.');
 			}
 			if (!is_string($config[$id])) {
 				throw new Exception('attributecollector:SQLCollector - \'' . $id . '\' is supposed to be a string.');
