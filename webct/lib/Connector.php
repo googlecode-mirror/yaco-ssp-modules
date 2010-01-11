@@ -37,7 +37,7 @@ class sspmod_webct_Connector
     var $url = '';
 
     function __construct(){
-        $config = SimpleSAML_Configuration::getConfig('config-webct.php');
+        $config = SimpleSAML_Configuration::getConfig('module_webct.php');
         // Basic params for WebCT SSO
         $this->authsource = $config->getValue('auth', 'default-sp');
         $this->webct_base_url = $config->getValue('webct_base_url');

@@ -23,6 +23,7 @@ $config = array (
     'course_map_mode' => 'sql',  // NULLL, 'sql' or 'map'
     'default_source' => 'WebCT',
     // 'sql' course code translation
+
     'dsn' => 'oci:dbname=xe',
     'dbuser' => 'user',
     'dbpassword' => 'password',
@@ -40,6 +41,7 @@ $config = array (
         'auditor' => array('01', 'AUD'),
         'instructor' => '02',
         'teaching assistant' => array('02', 'TA'),
+        'teachingassistant' => array('02', 'TA'),
         'content developer' => '03',
         'section designer' => '03',
     ),
