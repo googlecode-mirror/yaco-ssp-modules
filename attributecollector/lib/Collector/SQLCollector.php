@@ -64,6 +64,14 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 	private $db;
 
 
+    /**
+     * Attribute name case.
+     *
+     * This is optional and by default is "natural"
+     */
+    private $attrcase;
+
+
 	/* Initialize this collector.
 	 *
 	 * @param array $config	 Configuration information about this collector.
@@ -83,6 +91,20 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 		$this->username = $config['username'];
 		$this->password = $config['password'];
 		$this->query = $config['query'];
+
+        $case_options = array ("lower" => PDO::CASE_LOWER,
+                               "natural" => PDO::CASE_NATURAL,
+                               "upper" => PDF::CASE_UPPER);
+        // Default is 'natural'
+        $this->attrcase = $case_options["natural"];
+        if (array_key_exist($config, "attrcase")) {
+            $attrcase = $config["attrcase"];
+            if (in_array($attrcase, array_keys($case_options))) {
+                $this->attrcase = $case_options[$attrcase];
+            } else {
+                throw new Exception("attributecollector:SQLCollector - Wrong case value: '" . $attrcase . "'");
+            }
+        }
 	}
 
 
@@ -125,6 +147,7 @@ class sspmod_attributecollector_Collector_SQLCOllector extends sspmod_attributec
 		}
 
 		$this->db = new PDO($this->dsn, $this->username, $this->password);
+        $this->db->setAttribute(PDO::ATTR_CASE, $this->attrcase);
 		return $this->db;
 	}
 }
