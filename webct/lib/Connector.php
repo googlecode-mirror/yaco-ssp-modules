@@ -2,7 +2,7 @@
 /* WebCT SSO and on-the-fly provisioning
 Dependencies: php curl support
 DSN for Oracle:
-// Connect to a database defined in tnsnames.ora
+// Connect to a database defined in tnsnames.ora ($ORACLE_HOME/network/admin)
 oci:dbname=mydb
 
 // Connect using the Oracle Instant Client
@@ -11,8 +11,6 @@ oci:dbname=//localhost:1521/mydb
 
 /*  TODO:
  - Asserts of config at __construct time
- - Log in syslog what is happening
- - Raise exception for "Invalid Message Authentication Code"
  - Error message if course code non-existent in LMS (ims import fails)
    refactor
  - Allow configure 403 redirect page.
@@ -22,12 +20,13 @@ oci:dbname=//localhost:1521/mydb
  - Use singleton for this class?
  - The course code mapping is loaded for each user, is it possible to
    share it? (e.g. memcached, etc.)
- - Load mapping only if we need to provision.
 */
 
 
 define("WEBCT_SI_URL", "systemIntegrationApi.dowebct");
 define("WEBCT_SSO_URL", "public/autosignon");
+
+define("WEBCT_CONFIG_FILENAME", 'module_webct.php');
 
 class sspmod_webct_Connector
 {
@@ -37,7 +36,8 @@ class sspmod_webct_Connector
     var $url = '';
 
     function __construct(){
-        $config = SimpleSAML_Configuration::getConfig('module_webct.php');
+        SimpleSAML_Logger::debug("WebCT: Init connector, getting config");
+        $config = SimpleSAML_Configuration::getConfig(WEBCT_CONFIG_FILENAME);
         // Basic params for WebCT SSO
         $this->authsource = $config->getValue('auth', 'default-sp');
         $this->webct_base_url = $config->getValue('webct_base_url');
@@ -74,7 +74,6 @@ class sspmod_webct_Connector
             $this->dbuser = $dbuser;
             $this->dbpassword = $dbpassword;
             $this->sql = $sql;
-            $this->course_map = $this->load_sql_course_map();
         } elseif ($course_map_mode == 'map'){
             $map = $config->getValue('course_map');
             if (empty($map))
@@ -91,6 +90,7 @@ class sspmod_webct_Connector
 
     /* Load course map from sql */
     function load_sql_course_map(){
+        SimpleSAML_Logger::debug("WebCT: loading course map");
         $session = SimpleSAML_Session::getInstance();
         $map = $session->getData('course_map','course_map');
         $map = array();
@@ -150,6 +150,8 @@ class sspmod_webct_Connector
     */
 
     function siapi_call($adapter, $params, $xml=""){
+        SimpleSAML_Logger::debug("WebCT: preparing siapi call to adater '$adapter' " .
+            "with params:\n" . var_export($params, TRUE));
         $params['timestamp'] = time();
         $params_mac = $params;
         if (!empty($xml)){
@@ -163,6 +165,7 @@ class sspmod_webct_Connector
         <datetime>$gen_date</datetime>
     </properties>\n" . $xml . "\n</enterprise>";
             }
+        SimpleSAML_Logger::debug("and xml: \n" . var_export($xml, TRUE));
             $params_mac['chksum'] = "" . $this->chksum($xml);
         }
         $mac = $this->calculate_mac($params_mac);
@@ -181,19 +184,24 @@ class sspmod_webct_Connector
         if (!empty($xml)){
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params_send);
+            SimpleSAML_Logger::debug("WebCT: POST to WebCT '$url' " .
+                "with body:\n" . var_export($params_send, TRUE));
         } else {
             $url .= '?' . $this->urlencode_params($params_send);
+            SimpleSAML_Logger::debug("WebCT: GET to WebCT '$url'.");
         }
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $response = curl_exec($ch);
+        SimpleSAML_Logger::debug("WebCT: Reponse: " . var_export($response, TRUE));
         curl_close($ch);
+
         if (!empty($filepath))
             unlink($filepath);
         if ($response === FALSE)
             throw new Exception("Error en la comunicación con WebCT.");
-        if ($response == "Invalid Message Authentication Code")
+        if (strstr($response, "Invalid Message Authentication Code") !== FALSE)
             throw new Exception("La clave secreta de comunicacion con WebCT "
                 . "es incorrecta.");
         return $response;
@@ -225,8 +233,13 @@ class sspmod_webct_Connector
             'option' => 'restrict',
         );
         $body = $this->siapi_call('ims', $params, $xml);
-        if ($body === FALSE || strstr($body, "success") == FALSE)
+        if ($body === FALSE || strstr($body, "success") == FALSE){
+            SimpleSAML_Logger::error("WebCT: Unexpected result when ".
+              "creating user '$username' with attributes:\n" .
+              var_export($attributes, TRUE) . "\nThe result was: " .
+              var_export($body, TRUE));
             return FALSE;
+        }
         return TRUE;
     }
 
@@ -251,6 +264,7 @@ class sspmod_webct_Connector
     }
 
     function get_consortia_id($username){
+        SimpleSAML_Logger::debug("WebCT: Getting consortia_id for '$username'");
         $params = array(
             'operation' => 'get',
             'option' => 'consortia_id',
@@ -263,15 +277,22 @@ class sspmod_webct_Connector
                 $body, $found);
             if(!empty($found)){
                 $consortia_id = $found[1];
-                if ($consortia_id != "null")
+                if ($consortia_id != "null"){
+                    SimpleSAML_Logger::debug("WebCT: consortia_id for " .
+                        "'$username' is '$consortia_id'.");
                     return $consortia_id;
+                }
             }
         }
+        SimpleSAML_Logger::error("WebCT: Unexpected result for " .
+            "get_consortia_id: " . var_export($body, TRUE));
         return FALSE;
 
     }
 
     function get_person_ims_source($username){
+        SimpleSAML_Logger::debug("WebCT: getting ims source for " .
+            "person '$username'");
         $params = array(
             'action' => 'configure',
             'option' => 'get_person_ims_info',
@@ -281,15 +302,26 @@ class sspmod_webct_Connector
         // strip the XML tags
         $pattern = '|<sourcedid><source>(.*)</source><id>(.*)</id></sourcedid>|';
         $count = preg_match($pattern, $body, $found);
-        if($count==false || $count==0)
-            throw new Exception("No ims source found. Response was: $body");
-        if ($found[1] == 'null')
+        if($count==false || $count==0){
+            SimpleSAML_Logger::error("WebCT: Unexpected result for " .
+                "get_person_ims_source: " . var_export($body, TRUE));
+            throw new Exception("No ims source found. Response was: " .
+                var_export($body, TRUE));
+        }
+        if ($found[1] == 'null'){
+            SimpleSAML_Logger::debug("WebCT: ims source for " .
+                "'$username' is null.");
             return NULL;
+        }
         $res = array('source' => $found[1], 'id' => $found[2]);
+        SimpleSAML_Logger::debug("WebCT: ims source for " .
+            "'$username' is: " . var_export($res, TRUE));
         return $res;
     }
 
     function enroll_user($username, $webct_courses){
+        SimpleSAML_Logger::debug("WebCT: enrolling user '$username' in " .
+            "courses " . var_export($webct_courses, TRUE));
         $res = $this->get_person_ims_source($username);
         if ($res == NULL)
             throw new Exception("User $username unknown in WebCT.");
@@ -343,15 +375,23 @@ class sspmod_webct_Connector
         }
 
         $body = $this->siapi_call('ims', $params, $xml);
-        if (strstr($body, "success") == FALSE)
-            throw new Exception("WebCT Error: $body");
+        if (strstr($body, "success") == FALSE){
+            SimpleSAML_Logger::error("WebCT: Error when enrolling user " .
+                "'$username'. Result is: " . var_export($body, TRUE));
+            throw new Exception("WebCT Error: " . var_export($body, TRUE));
+        }
+        SimpleSAML_Logger::debug("WebCT: Success enrolling user '$username'.");
         return TRUE;
     }
 
     function get_sso_url($username){
+        SimpleSAML_Logger::debug("WebCT: Getting SSO URL for '$username'.");
         $consortia_id = $this->get_consortia_id($username);
-        if ($consortia_id == FALSE)
+        if ($consortia_id == FALSE){
+            SimpleSAML_Logger::debug("WebCT: Result get SSO: '$username' ".
+                "-> does not exist.");
             return FALSE;
+        }
         $params = array(
             'wuui' => $consortia_id,
             'timestamp' => time(),
@@ -360,13 +400,18 @@ class sspmod_webct_Connector
         $params['mac'] = $mac;
         $url = $this->webct_base_url . WEBCT_SSO_URL . '?' .
             $this->urlencode_params($params);
+        SimpleSAML_Logger::debug("WebCT: SSO URL for '$username' is: $url");
         return $url;
     }
 
     /* Translate attribute values into local LMS courses */
     function translate_course_array($courses){
+        SimpleSAML_Logger::debug("WebCT: Translate courses: " .
+            var_export($courses, TRUE));
         // translate 'urn:tenena.org:schacStatus....' into something
         // more userful for webct.
+        if ($this->course_map_mode == 'sql')
+            $this->course_map = $this->load_sql_course_map();
         $webct_courses = array();
         if (empty($courses))
             return $webct_courses;
@@ -381,8 +426,6 @@ class sspmod_webct_Connector
                 $status = $this->translate_status($found['status']);
                 $res = $this->translate_course_code($code, $period);
                 if (!empty($res)){
-                    $ims_source = $res['source'];
-                    $ims_id = $res['id'];
                     $webct_courses[] = array(
                         'ims_source' => $res,
                         'role' => $role,
@@ -390,30 +433,45 @@ class sspmod_webct_Connector
                 }
             }
         }
+        SimpleSAML_Logger::debug("WebCT: Translate courses result: " .
+            var_export($webct_courses, TRUE));
         return $webct_courses;
     }
 
     /* Translate user status. */
     function translate_status($status){
+        SimpleSAML_Logger::debug("WebCT: Translate status: " .
+            var_export($status, TRUE));
         $status = strtolower($status);
         if (!array_key_exists($status, $this->status_map))
-            throw new Exception("Invalid status '$status' for webct ".
+            throw new Exception("Invalid status '$status' for webct " .
                 " connector. Not in status_map.");
-        return $this->status_map[$status];
+        $res = $this->status_map[$status];
+        SimpleSAML_Logger::debug("WebCT: Translate status result: " .
+            var_export($res, TRUE));
+        return $res;
     }
 
     /* Translate user status. */
     function translate_role($role){
+        SimpleSAML_Logger::debug("WebCT: Translate role: " .
+            var_export($role, TRUE));
         if (!array_key_exists($role, $this->role_map))
             throw new Exception("Invalid role '$role' for webct ".
                 " connector. Not in role_map.");
-        return $this->role_map[$role];
+        $res = $this->role_map[$role];
+        SimpleSAML_Logger::debug("WebCT: Translate role result: " .
+            var_export($res, TRUE));
+        return $res;
     }
 
     /* Translate course, period to ims source & id.
        Returs: array('source' => ims_source, 'id' => ims_id)
     */
     function translate_course_code($code, $period){
+        SimpleSAML_Logger::debug("WebCT: Translate course code: " .
+            var_export($code, TRUE) . "   for period: " . var_export($period, TRUE));
+        $source = $this->default_source;
         if (!empty($this->course_map_mode)){
             $key = "$code:$period";
             if (array_key_exists($key, $this->course_map)){
@@ -422,10 +480,11 @@ class sspmod_webct_Connector
                 $id = $res['id'];
             }
         } else {
-            $source = $this->default_source;
             $id = $code;
         }
-        return array('source' => $source, 'id' => $id);
+        $res = array('source' => $source, 'id' => $id);
+        SimpleSAML_Logger::debug("WebCT: Translate course code result: " .
+            var_export($res, TRUE));
+        return $res;
     }
 }
-
