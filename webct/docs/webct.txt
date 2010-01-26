@@ -15,11 +15,7 @@ This module provides a bridge between simpleSAMLphp and Blackboard/WebCT with
 the following features:
  - Single Sign-On
  - User provisioning
- - Course (sections) enrollment (activate and deny access)
-
-May be in future this will not be needed, as newer versions of Weblogic
-already provide SAML 2 access. But until then, this module may me useful for
-people to gain federated identity access to Blackboard / WebCT.
+ - Course (section) enrollments (activate and deny access)
 
 
 `webct`
@@ -32,9 +28,40 @@ people to gain federated identity access to Blackboard / WebCT.
 To connect simpleSAMLphp to WebCT follow these steps:
  * Install and configure simpleSAMLphp >= 1.5
  * Download this module and place it in you simpleSAMLphp's module dir.
- * Copy config-templates/config-webct.php to the simpleSAMLphp's config dir.
- * Edit config-webct.php to suite your needs.
+ * Copy config-templates/module_webct.php to the simpleSAMLphp's config dir.
+ * Edit module_webct.php to suite your needs.
 
-Once configured correctly, direct your browser to:
+Once configured correctly, direct your browser to this URL for SSO:
 http://...../module.php/webct/login.php
+
+More about Blackboard/Vista 8 and this module:
+ - Blackboard/WebCT Vista/CE 8.0:
+   - uses Oracle/BEA Weblogic Server 9.2 which has no support for SAML 2. 
+     Oracle Weblogic has support for SAML 2 since version 10.3.
+   - has an automatic sign-on protocol which uses Message Authn Codes
+   - has integration an API, called "System Integration API" (SIAPI). This
+     module uses 2 apdapters called 'IMS Adapter' and 'Standard Adapter'.
+   - Single Sign-On uses 'Standard Adapter' to check the validity of a
+     user id and return a global SSO user id.
+ - The connector has been developed as module because it's easier 
+   to deploy.
+
+TODO:
+ - update user data (name, email) when logging in
+ - Single Logout
+ - more docs
+ - hook to display link for logging in (authn tab)
+ - Asserts of config at __construct time
+ - Error message if course code non-existent in LMS (ims import fails)
+   refactor
+ - Use SSP Exceptions, instead of Exception
+ - Translate messages.
+ - Allow configure 403 redirect page.
+ - If course provisioning fails, e.g., some data is incorrect, SSO fails.
+   Should be more solid, display an error and let user proceed.
+ - The course code mapping is loaded for each user. Is it possible to
+   share it? (e.g. memcached, etc.)
+ - standard apdater workaround
+ - Use singleton for this class?
+*/
 
