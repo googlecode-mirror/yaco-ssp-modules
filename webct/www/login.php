@@ -32,11 +32,10 @@ if (empty($url)){
     if ($url == FALSE){
         // if user doesn't exist, create it
         $res = $webct->create_user($userid, $attributes);
-        if ($res == TRUE)
-            $url = $webct->get_sso_url($userid);
-        else
+        if ($res == FALSE)
             throw new Exception("No se puede crear usuario "
                 . "en esta plataforma: $userid !");
+        $url = $webct->get_sso_url($userid);
         // Store $url for the next time to avoid reprovisioning
         $session->setData('WebCT_URL', 'url', $url);
     }
