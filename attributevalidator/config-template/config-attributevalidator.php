@@ -16,7 +16,7 @@ $config = array (
 		'schacUserPrivateAttribute', 'schacPersonalUniqueCode',
 	),
 	'optional_attrs' => array (
-		'schacMotherTonge', 'schacGender', 'chacDateOfBirth',
+		'schacMotherTonge', 'schacGender', 'schacDateOfBirth',
 		'schacPlaceOfBirth', 'schacCountryOfCitizenship',
 		'jpegPhoto', 'eduPersonNickname', 'schacPersonalTitle',
 		'title', 'preferredLanguage', 'schacYearOfBirth',
