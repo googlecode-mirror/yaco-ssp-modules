@@ -9,19 +9,6 @@ oci:dbname=mydb
 oci:dbname=//localhost:1521/mydb
 */
 
-/*  TODO:
- - Asserts of config at __construct time
- - Error message if course code non-existent in LMS (ims import fails)
-   refactor
- - Allow configure 403 redirect page.
- - If course provisioning fails, e.g., some data is incorrect, SSO fails.
-   Should be more solid, display an error and let user proceed.
- - Still no logout / single logout
- - Use singleton for this class?
- - The course code mapping is loaded for each user, is it possible to
-   share it? (e.g. memcached, etc.)
-*/
-
 
 define("WEBCT_SI_URL", "systemIntegrationApi.dowebct");
 define("WEBCT_SSO_URL", "public/autosignon");
@@ -203,7 +190,7 @@ class sspmod_webct_Connector
             throw new Exception("Error en la comunicación con WebCT.");
         if (strstr($response, "Invalid Message Authentication Code") !== FALSE)
             throw new Exception("La clave secreta de comunicacion con WebCT "
-                . "es incorrecta.");
+                . "es incorrecta o los relojes no están sincronizados.");
         return $response;
     }
 
