@@ -50,7 +50,6 @@ TODO:
  - update user data (name, email) when logging in
  - Single Logout
  - more docs
- - hook to display link for logging in (authn tab)
  - Asserts of config at __construct time
  - Error message if course code non-existent in LMS (ims import fails)
    refactor

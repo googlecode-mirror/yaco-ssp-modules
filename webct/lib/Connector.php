@@ -362,13 +362,18 @@ class sspmod_webct_Connector
         }
 
         $body = $this->siapi_call('ims', $params, $xml);
-        if (strstr($body, "success") == FALSE){
+        if (stripos($body, "success") === FALSE){
             SimpleSAML_Logger::error("WebCT: Error when enrolling user " .
                 "'$username'. Result is: " . var_export($body, TRUE));
             throw new Exception("WebCT Error: " . var_export($body, TRUE));
         }
-        SimpleSAML_Logger::debug("WebCT: Success enrolling user '$username'.");
-        return TRUE;
+        if (stripos($body, "failed") !== FALSE){
+            // partially failed
+            return $body;
+        } else {
+            SimpleSAML_Logger::debug("WebCT: Success enrolling user '$username'.");
+            return TRUE;
+        }
     }
 
     function get_sso_url($username){

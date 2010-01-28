@@ -41,7 +41,14 @@ if (empty($url)){
     }
 
     // enroll user in course sections
-    $webct->enroll_user($userid, $webct_courses);
+    $success = $webct->enroll_user($userid, $webct_courses);
 }
-
-header("Location: $url");
+if ($success === TRUE) {
+    header("Location: $url");
+} else {
+    $config = SimpleSAML_Configuration::getInstance();
+    $t = new SimpleSAML_XHTML_Template($config, 'webct:webct_warning.php');
+    $t->data['warning'] = $success;
+    $t->data['url'] = $url;
+    $t->show();
+}
