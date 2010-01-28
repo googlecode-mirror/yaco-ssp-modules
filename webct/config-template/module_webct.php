@@ -20,10 +20,9 @@ $config = array (
     'course_pattern' => 'urn:mace:terena.org:schac:userStatus:'.
         'es:campusandaluzvirtual.es:'.
         '(?P<code>.*):(?P<period>.*):(?P<role>.*):(?P<status>.*)',
-    'course_map_mode' => 'sql',  // NULLL, 'sql' or 'map'
+    'course_map_mode' => 'sql',  // NULL, 'sql', 'map' or 'expr'
     'default_source' => 'WebCT',
     // 'sql' course code translation
-
     'dsn' => 'oci:dbname=xe',
     'dbuser' => 'user',
     'dbpassword' => 'password',
@@ -31,8 +30,13 @@ $config = array (
     // 'map' array; only used if course_map_mode == 'map'
     'course_map' => array(
         '12345678:2009' => 'TCS2',
-
+        '87654321:2009' => 'TCS1',
     ),
+    // 'expr' course translations: takes '$code' and '$period' as parameters
+    'expr' => 'array("source" => "WebCT",
+                     "id" => "CAV" . $code . "_" . substr($period,2,2) .
+                        substr($period,5,2) . ".default",
+                     )',
 
     // ims name to webct/ims role + subrole codes. At present, we only support section enrollment (not course
     'role_map' => array(

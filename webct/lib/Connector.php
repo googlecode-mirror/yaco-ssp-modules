@@ -67,6 +67,8 @@ class sspmod_webct_Connector
                 throw new Exception("Missing or empty 'course_map' "
                     ."for course_map_mode 'map' in webct.php configuration.");
             $this->course_map = $map;
+        } elseif ($course_map_mode == 'expr') {
+            $this->expr = $config->getValue('expr');
         }
         $this->course_map_mode = $course_map_mode;
         // role and status translation maps
@@ -465,11 +467,18 @@ class sspmod_webct_Connector
             var_export($code, TRUE) . "   for period: " . var_export($period, TRUE));
         $source = $this->default_source;
         if (!empty($this->course_map_mode)){
-            $key = "$code:$period";
-            if (array_key_exists($key, $this->course_map)){
-                $res = $this->course_map[$key];
+            if ($this->course_map_mode == 'expr'){
+                $code = "return " . $this->expr . ';';
+                $res = eval($code);
                 $source = $res['source'];
                 $id = $res['id'];
+            } else {
+                $key = "$code:$period";
+                if (array_key_exists($key, $this->course_map)){
+                    $res = $this->course_map[$key];
+                    $source = $res['source'];
+                    $id = $res['id'];
+                }
             }
         } else {
             $id = $code;
