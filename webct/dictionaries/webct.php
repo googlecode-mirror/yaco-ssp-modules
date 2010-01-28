@@ -19,6 +19,6 @@ $lang = array(
     ),
     'warning_continue' => array(
         'en' => 'Click this link to proceed',
-        'es' => 'Active este enlace para seguir',
+        'es' => 'Haga click para continuar',
     ),
 );

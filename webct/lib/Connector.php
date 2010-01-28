@@ -371,7 +371,11 @@ class sspmod_webct_Connector
         }
         if (stripos($body, "failed") !== FALSE){
             // partially failed
-            return $body;
+            $course_codes = "";
+            foreach ($webct_courses as $course)
+                 $course_codes .= " " . $course['ims_source']['id'];
+            $res = "Parece que alguno de los códigos de asignatura no está dado de alta en la plataforma de enseñanza virtual. Los codigos de cursos son: " . $course_codes;
+	    return $res;
         } else {
             SimpleSAML_Logger::debug("WebCT: Success enrolling user '$username'.");
             return TRUE;
@@ -478,7 +482,11 @@ class sspmod_webct_Connector
                     $res = $this->course_map[$key];
                     $source = $res['source'];
                     $id = $res['id'];
-                }
+                } else {
+        	    SimpleSAML_Logger::warning("WebCT: Can't find course translation for $key!");
+		    $id = $key;
+                    $source = '';
+		}
             }
         } else {
             $id = $code;
