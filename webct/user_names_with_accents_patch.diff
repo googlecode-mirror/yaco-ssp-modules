@@ -1,0 +1,107 @@
+Index: lib/Connector.php
+===================================================================
+--- lib/Connector.php	(revisión: 68)
++++ lib/Connector.php	(copia de trabajo)
+@@ -98,14 +98,34 @@
+         return $map;
+     }
+ 
++    function uniord($c) {
++        $h = ord($c{0});
++        if ($h <= 0x7F) {
++            return $h;
++        } else if ($h < 0xC2) {
++            return false;
++        } else if ($h <= 0xDF) {
++            return ($h & 0x1F) << 6 | (ord($c{1}) & 0x3F);
++        } else if ($h <= 0xEF) {
++            return ($h & 0x0F) << 12 | (ord($c{1}) & 0x3F) << 6
++                                     | (ord($c{2}) & 0x3F);
++        } else if ($h <= 0xF4) {
++            return ($h & 0x0F) << 18 | (ord($c{1}) & 0x3F) << 12
++                                     | (ord($c{2}) & 0x3F) << 6
++                                     | (ord($c{3}) & 0x3F);
++        } else {
++            return false;
++        }
++    }
+ 
+ 
++
+     /* Calculate checksum of a string */
+     function chksum($string){
+         $chksum = 0;
+-        $size = strlen($string);
++        $size = mb_strlen($string, 'UTF-8');
+         for($i=0; $i<$size; $i++)
+-            $chksum += ord(substr($string, $i, 1));
++            $chksum += $this->uniord(mb_substr($string, $i, 1, 'UTF-8'));
+         return $chksum;
+     }
+ 
+@@ -147,14 +167,14 @@
+             // Add 'ims enterprise' common string
+             if ($adapter == 'ims'){
+                 $gen_date = date(DATE_ISO8601);
+-                $xml = "<?xml version=\"1.0\"?>
++                $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+ <enterprise xmlns=\"http://www.imsproject.org/xsd/imsep_rootv1p01\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:webct=\"http://www.webct.com/IMS\">
+     <properties>
+         <datasource>Confia</datasource>
+         <datetime>$gen_date</datetime>
+     </properties>\n" . $xml . "\n</enterprise>";
+             }
+-        SimpleSAML_Logger::debug("and xml: \n" . var_export($xml, TRUE));
++            SimpleSAML_Logger::debug("and xml: \n" . var_export($xml, TRUE));
+             $params_mac['chksum'] = "" . $this->chksum($xml);
+         }
+         $mac = $this->calculate_mac($params_mac);
+@@ -371,7 +391,11 @@
+         }
+         if (stripos($body, "failed") !== FALSE){
+             // partially failed
+-            return $body;
++            $course_codes = "";
++            foreach ($webct_courses as $course)
++                 $course_codes .= " " . $course['ims_source']['id'];
++            $res = "Parece que alguno de los códigos de asignatura no está dado de alta en la plataforma de enseñanza virtual. Los codigos de cursos son: " . $course_codes;
++	    return $res;
+         } else {
+             SimpleSAML_Logger::debug("WebCT: Success enrolling user '$username'.");
+             return TRUE;
+@@ -478,7 +502,11 @@
+                     $res = $this->course_map[$key];
+                     $source = $res['source'];
+                     $id = $res['id'];
+-                }
++                } else {
++        	    SimpleSAML_Logger::warning("WebCT: Can't find course translation for $key!");
++		    $id = $key;
++                    $source = '';
++		}
+             }
+         } else {
+             $id = $code;
+Index: dictionaries/webct.php
+===================================================================
+--- dictionaries/webct.php	(revisión: 68)
++++ dictionaries/webct.php	(copia de trabajo)
+@@ -19,6 +19,6 @@
+     ),
+     'warning_continue' => array(
+         'en' => 'Click this link to proceed',
+-        'es' => 'Active este enlace para seguir',
++        'es' => 'Haga click para continuar',
+     ),
+ );
+Index: templates/webct_warning.php
+===================================================================
+--- templates/webct_warning.php	(revisión: 68)
++++ templates/webct_warning.php	(copia de trabajo)
+@@ -22,5 +22,5 @@
+ echo "<h1>$header</h1>\n";
+ echo "<p>$generic_text:</p>\n<br />\n";
+ echo "<p><b>$warning</b></p>\n<br />\n";
+-echo "<p><a href=\"$url\">$continue_text</a></p>\n";
++echo "<h3><center><a href=\"$url\">$continue_text</a></center></h3>\n";
+ $this->includeAtTemplateBase('includes/footer.php');
