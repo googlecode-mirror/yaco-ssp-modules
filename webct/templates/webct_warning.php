@@ -16,6 +16,11 @@ $generic_text = $this->t('{webct:webct:warning_text}');
 $continue_text = $this->t('{webct:webct:warning_continue}');
 
 $warning = $this->data['warning'];
+if (is_array($warning))
+    $warning = $this->t($warning[0], $warning[1]);
+else
+    $warning = $this->t($warning);
+
 $url = $this->data['url'];
 
 $this->includeAtTemplateBase('includes/header.php');

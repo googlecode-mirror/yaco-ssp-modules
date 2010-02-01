@@ -28,6 +28,8 @@ class sspmod_webct_Connector
         // Basic params for WebCT SSO
         $this->authsource = $config->getValue('auth', 'default-sp');
         $this->webct_base_url = $config->getValue('webct_base_url');
+        $this->webct_internal_url = $config->getValue('webct_internal_url',
+            $this->webct_base_url);
         $this->secret = $config->getValue('secret', '');
         $this->url = $config->getValue('initial_url',
             'viewMyWebCT.dowebct');
@@ -98,14 +100,37 @@ class sspmod_webct_Connector
         return $map;
     }
 
+    /* Return Unicode ord of an UTF-8 character
+       Thanks to: http://www.php.net/manual/en/function.ord.php#77905
+    */
+    function uniord($c) {
+        $h = ord($c{0});
+        if ($h <= 0x7F) {
+            return $h;
+        } else if ($h < 0xC2) {
+            return false;
+        } else if ($h <= 0xDF) {
+            return ($h & 0x1F) << 6 | (ord($c{1}) & 0x3F);
+        } else if ($h <= 0xEF) {
+            return ($h & 0x0F) << 12 | (ord($c{1}) & 0x3F) << 6
+                                     | (ord($c{2}) & 0x3F);
+        } else if ($h <= 0xF4) {
+            return ($h & 0x0F) << 18 | (ord($c{1}) & 0x3F) << 12
+                                     | (ord($c{2}) & 0x3F) << 6
+                                     | (ord($c{3}) & 0x3F);
+        } else {
+            return false;
+        }
+    }
+
 
 
     /* Calculate checksum of a string */
     function chksum($string){
         $chksum = 0;
-        $size = strlen($string);
+        $size = mb_strlen($string, 'UTF-8');
         for($i=0; $i<$size; $i++)
-            $chksum += ord(substr($string, $i, 1));
+            $chksum += $this->uniord(mb_substr($string, $i, 1, 'UTF-8'));
         return $chksum;
     }
 
@@ -139,22 +164,22 @@ class sspmod_webct_Connector
     */
 
     function siapi_call($adapter, $params, $xml=""){
-        SimpleSAML_Logger::debug("WebCT: preparing siapi call to adater '$adapter' " .
-            "with params:\n" . var_export($params, TRUE));
+        SimpleSAML_Logger::debug("WebCT: preparing siapi call to adater " .
+            "'$adapter' with params:\n" . var_export($params, TRUE));
         $params['timestamp'] = time();
         $params_mac = $params;
         if (!empty($xml)){
             // Add 'ims enterprise' common string
             if ($adapter == 'ims'){
                 $gen_date = date(DATE_ISO8601);
-                $xml = "<?xml version=\"1.0\"?>
+                $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <enterprise xmlns=\"http://www.imsproject.org/xsd/imsep_rootv1p01\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:webct=\"http://www.webct.com/IMS\">
     <properties>
         <datasource>Confia</datasource>
         <datetime>$gen_date</datetime>
     </properties>\n" . $xml . "\n</enterprise>";
             }
-        SimpleSAML_Logger::debug("and xml: \n" . var_export($xml, TRUE));
+            SimpleSAML_Logger::debug("and xml: \n" . var_export($xml, TRUE));
             $params_mac['chksum'] = "" . $this->chksum($xml);
         }
         $mac = $this->calculate_mac($params_mac);
@@ -169,7 +194,7 @@ class sspmod_webct_Connector
         }
         $params_send['auth'] = $mac;
         $ch = curl_init();
-        $url = $this->webct_base_url . WEBCT_SI_URL;
+        $url = $this->webct_internal_url . WEBCT_SI_URL;
         if (!empty($xml)){
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params_send);
@@ -183,7 +208,8 @@ class sspmod_webct_Connector
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
         $response = curl_exec($ch);
-        SimpleSAML_Logger::debug("WebCT: Reponse: " . var_export($response, TRUE));
+        SimpleSAML_Logger::debug("WebCT: Reponse: " .
+            var_export($response, TRUE));
         curl_close($ch);
 
         if (!empty($filepath))
@@ -289,7 +315,8 @@ class sspmod_webct_Connector
         );
         $body = $this->siapi_call('ims', $params);
         // strip the XML tags
-        $pattern = '|<sourcedid><source>(.*)</source><id>(.*)</id></sourcedid>|';
+        $pattern = "|<sourcedid><source>(.*)</source><id>(.*)</id>" .
+            "</sourcedid>|";
         $count = preg_match($pattern, $body, $found);
         if($count==false || $count==0){
             SimpleSAML_Logger::error("WebCT: Unexpected result for " .
@@ -371,13 +398,17 @@ class sspmod_webct_Connector
         }
         if (stripos($body, "failed") !== FALSE){
             // partially failed
-            $course_codes = "";
             foreach ($webct_courses as $course)
-                 $course_codes .= " " . $course['ims_source']['id'];
-            $res = "Parece que alguno de los códigos de asignatura no está dado de alta en la plataforma de enseñanza virtual. Los codigos de cursos son: " . $course_codes;
-	    return $res;
+                 $course_codes[] = $course['ims_source']['id'];
+            $course_codes = implode(", ", $course_codes);
+            SimpleSAML_Logger::warning("WebCT: Problems enrolling user "
+                . "'$username' in course codes: $course_codes");
+            $res = array("{webct:webct:warning_invalid_course_codes}",
+                    array('%COURSE_CODES%' => $course_codes));
+            return $res;
         } else {
-            SimpleSAML_Logger::debug("WebCT: Success enrolling user '$username'.");
+            SimpleSAML_Logger::debug("WebCT: Success enrolling user " .
+                "'$username'.");
             return TRUE;
         }
     }
@@ -468,7 +499,8 @@ class sspmod_webct_Connector
     */
     function translate_course_code($code, $period){
         SimpleSAML_Logger::debug("WebCT: Translate course code: " .
-            var_export($code, TRUE) . "   for period: " . var_export($period, TRUE));
+            var_export($code, TRUE) . "   for period: " .
+            var_export($period, TRUE));
         $source = $this->default_source;
         if (!empty($this->course_map_mode)){
             if ($this->course_map_mode == 'expr'){
@@ -483,10 +515,11 @@ class sspmod_webct_Connector
                     $source = $res['source'];
                     $id = $res['id'];
                 } else {
-        	    SimpleSAML_Logger::warning("WebCT: Can't find course translation for $key!");
-		    $id = $key;
+                    SimpleSAML_Logger::warning("WebCT: Can't find course " .
+                        "translation for $key!");
+                    $id = $key;
                     $source = '';
-		}
+                }
             }
         } else {
             $id = $code;

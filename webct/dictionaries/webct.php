@@ -21,4 +21,8 @@ $lang = array(
         'en' => 'Click this link to proceed',
         'es' => 'Haga click para continuar',
     ),
+    'warning_invalid_course_codes' => array(
+        'en' => 'Some of the provided course codes may no be valid. The codes are: %COURSE_CODES%',
+        'es' => 'Parece que alguno de los códigos de asignatura no está dado de alta en la plataforma de enseñanza virtual. Los codigos de cursos son: %COURSE_CODES%',
+    ),
 );
