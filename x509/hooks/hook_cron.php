@@ -17,7 +17,6 @@ function x509_hook_cron(&$croninfo) {
 		$cron_config = SimpleSAML_Configuration::getConfig('module_cron.php');
 
 		$cron_tags = $certvalidator_config->getArray('cron', array());
-		$croninfo['summary'] = array();
 
 		$crlurl_array = $certvalidator_config->getArray('crlurl', array());
 		$crlpath = $certvalidator_config->getValue('crlpath', array());
