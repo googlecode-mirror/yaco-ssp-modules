@@ -26,7 +26,7 @@ class sspmod_x509_CertValidator {
 	}
 
 
-	public static function validateCert($cert, $crl_validation=true) {
+	public static function validateCert($cert, $crl_validation=true, $ocsp_validation=false) {
 		$config = SimpleSAML_Configuration::getInstance();
 		$autoconfig = $config->copyFromBase('certvalidator', 'config-certvalidator.php');
 
@@ -39,11 +39,14 @@ $cert
 -----END CERTIFICATE-----
 CERTEOT;
 		}
-		if($crl_validation) {
+		if ($crl_validation) {
 			$crlpath = $autoconfig->getValue('crlpath');
 			$result = sspmod_x509_Utilities::validateCertificateWithCRL($cert, $capath, $crlpath);
-		}
-		else {
+		} else if ($ocsp_validation) {
+			$ocspurl = $autoconfig->getValue('ocspurl');
+			$issuer = file_get_contents($autoconfig->getValue('ocspissuer'));
+			$result = sspmod_x509_Utilities::validateCertificateWithOCSP($cert, $capath, $ocspurl, $issuer);
+		} else {
 			$result = sspmod_x509_Utilities::validateCertificate($cert, $capath);
 		}
 
