@@ -15,12 +15,14 @@ define("WEBCT_SSO_URL", "public/autosignon");
 
 define("WEBCT_CONFIG_FILENAME", 'module_webct.php');
 
+
 class sspmod_webct_Connector
 {
 
     var $webct_base_url = 'http://localhost/webct/';
     var $secret;
     var $url = '';
+
 
     function __construct(){
         SimpleSAML_Logger::debug("WebCT: Init connector, getting config");
@@ -100,6 +102,7 @@ class sspmod_webct_Connector
         return $map;
     }
 
+
     /* Return Unicode ord of an UTF-8 character
        Thanks to: http://www.php.net/manual/en/function.ord.php#77905
     */
@@ -146,6 +149,7 @@ class sspmod_webct_Connector
         return $mac;
     }
 
+
     function urlencode_params($params){
         $res = '';
         foreach ($params as $key => $value)
@@ -162,7 +166,6 @@ class sspmod_webct_Connector
     See: http://www.imsglobal.org/enterprise/
     Some messages, especially 'personlist' are NOT enterprise.
     */
-
     function siapi_call($adapter, $params, $xml=""){
         SimpleSAML_Logger::debug("WebCT: preparing siapi call to adater " .
             "'$adapter' with params:\n" . var_export($params, TRUE));
@@ -222,6 +225,7 @@ class sspmod_webct_Connector
         return $response;
     }
 
+
     function create_user($username, $attributes){
         $sn = $attributes[$this->sn_attr][0];
         $gn = $attributes[$this->givenName_attr][0];
@@ -258,6 +262,7 @@ class sspmod_webct_Connector
         return TRUE;
     }
 
+
     function get_enrollments($lc_source, $lc_id, $user_source, $user_id){
         // TODO: still not working
         $params = array(
@@ -278,8 +283,15 @@ class sspmod_webct_Connector
         return $body;
     }
 
-    function get_consortia_id($username){
-        SimpleSAML_Logger::debug("WebCT: Getting consortia_id for '$username'");
+
+    /* Get WebCT user id for a username. Returns FALSE if doesn't exist.
+       Normally, it's the same, but may be different if it contains
+       strange characters or there are more than one user with the same
+       username but different institutions.
+    */
+    function get_user_id($username){
+        SimpleSAML_Logger::debug("WebCT: Getting WebCT user id for " .
+            "'$username'.");
         $params = array(
             'operation' => 'get',
             'option' => 'consortia_id',
@@ -293,17 +305,20 @@ class sspmod_webct_Connector
             if(!empty($found)){
                 $consortia_id = $found[1];
                 if ($consortia_id != "null"){
-                    SimpleSAML_Logger::debug("WebCT: consortia_id for " .
+                    SimpleSAML_Logger::debug("WebCT: WebCT user id for " .
                         "'$username' is '$consortia_id'.");
                     return $consortia_id;
                 }
+                SimpleSAML_Logger::debug("WebCT: get_user_id: '$username' " .
+                    "doesn't exist in WebCT.");
+                return FALSE;
             }
         }
         SimpleSAML_Logger::error("WebCT: Unexpected result for " .
-            "get_consortia_id: " . var_export($body, TRUE));
+            "get_user_id: " . var_export($body, TRUE));
         return FALSE;
-
     }
+
 
     function get_person_ims_source($username){
         SimpleSAML_Logger::debug("WebCT: getting ims source for " .
@@ -334,6 +349,7 @@ class sspmod_webct_Connector
             "'$username' is: " . var_export($res, TRUE));
         return $res;
     }
+
 
     function enroll_user($username, $webct_courses){
         SimpleSAML_Logger::debug("WebCT: enrolling user '$username' in " .
@@ -413,25 +429,25 @@ class sspmod_webct_Connector
         }
     }
 
-    function get_sso_url($username){
-        SimpleSAML_Logger::debug("WebCT: Getting SSO URL for '$username'.");
-        $consortia_id = $this->get_consortia_id($username);
-        if ($consortia_id == FALSE){
-            SimpleSAML_Logger::debug("WebCT: Result get SSO: '$username' ".
-                "-> does not exist.");
-            return FALSE;
-        }
+
+    /* Get SSO URL for WebCT User.
+       Doesn't check if user exists in WebCT. (Use get_user_id.)
+    */
+    function get_sso_url($webct_uid){
+        SimpleSAML_Logger::debug("WebCT: Getting SSO URL for WebCT user " .
+            "'$webct_uid'.");
         $params = array(
-            'wuui' => $consortia_id,
+            'wuui' => $webct_uid,
             'timestamp' => time(),
             'url' => $this->url);
         $mac =  $this->calculate_mac($params);
         $params['mac'] = $mac;
         $url = $this->webct_base_url . WEBCT_SSO_URL . '?' .
             $this->urlencode_params($params);
-        SimpleSAML_Logger::debug("WebCT: SSO URL for '$username' is: $url");
+        SimpleSAML_Logger::debug("WebCT: SSO URL for '$webct_uid' is: $url");
         return $url;
     }
+
 
     /* Translate attribute values into local LMS courses */
     function translate_course_array($courses){
@@ -467,6 +483,7 @@ class sspmod_webct_Connector
         return $webct_courses;
     }
 
+
     /* Translate user status. */
     function translate_status($status){
         SimpleSAML_Logger::debug("WebCT: Translate status: " .
@@ -493,6 +510,7 @@ class sspmod_webct_Connector
             var_export($res, TRUE));
         return $res;
     }
+
 
     /* Translate course, period to ims source & id.
        Returs: array('source' => ims_source, 'id' => ims_id)

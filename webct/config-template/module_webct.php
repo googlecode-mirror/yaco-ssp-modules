@@ -29,8 +29,8 @@ $config = array (
     'sql' => "select YEAR as PERIOD, COURSE_CODE as CODE, WEBCT_ID as IMS_ID FROM COURSE_MAPPING",
     // 'map' array; only used if course_map_mode == 'map'
     'course_map' => array(
-        '12345678:2009' => 'TCS2',
-        '87654321:2009' => 'TCS1',
+        '12345678:2009-10' => 'TCS2',
+        '87654321:2009-10' => 'TCS1',
     ),
     // 'expr' course translations: takes '$code' and '$period' as parameters
     'expr' => 'array("source" => "WebCT",
