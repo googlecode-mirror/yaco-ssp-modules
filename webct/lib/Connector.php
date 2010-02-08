@@ -656,8 +656,8 @@ class sspmod_webct_Connector
         $source = $this->default_source;
         if (!empty($this->course_map_mode)){
             if ($this->course_map_mode == 'expr'){
-                $code = "return " . $this->expr . ';';
-                $res = eval($code);
+                $code_block = "return " . $this->expr . ';';
+                $res = eval($code_block);
                 $source = $res['source'];
                 $id = $res['id'];
             } else {
