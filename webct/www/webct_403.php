@@ -8,5 +8,6 @@
 
 $config = SimpleSAML_Configuration::getInstance();
 $t = new SimpleSAML_XHTML_Template($config, 'webct:webct_403.php');
+$t->data['%EMAIL%'] = $config->getValue('technicalcontact_email', '');
 header('HTTP/1.0 403 Forbidden');
 $t->show();

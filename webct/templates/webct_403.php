@@ -12,8 +12,7 @@
 
 
 $header = $this->t('{webct:webct:403_header}');
-$text = $this->t('{webct:webct:403_text}');
-
+$text = $this->t('{webct:webct:403_text}', $this->data);
 $this->includeAtTemplateBase('includes/header.php');
 ?>
 <h1><?php echo $header; ?></h1>

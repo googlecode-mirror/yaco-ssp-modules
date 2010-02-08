@@ -6,10 +6,11 @@
 $config = array (
 	'auth' => 'saml',
     'webct_base_url' => 'http://localhost:8280/webct/',
-    // WebCT SSO parameters
+    // WebCT SSO & SLO parameters
     'secret' => 'WebCTSSO',
     'initial_url' => 'viewMyWebCT.dowebct',
     'userid_attr' => 'eduPersonPrincipalName',
+    'logout_redirect_url' => '/',
     // user provisioning parameters
     'sn_attr' => 'sn',
     'givenName_attr' => 'givenName',

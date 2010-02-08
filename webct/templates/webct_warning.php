@@ -11,21 +11,27 @@
  */
 
 
-$header = $this->t('{webct:webct:warning_header}');
-$generic_text = $this->t('{webct:webct:warning_text}');
-$continue_text = $this->t('{webct:webct:warning_continue}');
 
 $warning = $this->data['warning'];
 if (is_array($warning))
     $warning = $this->t($warning[0], $warning[1]);
 else
     $warning = $this->t($warning);
-
 $url = $this->data['url'];
+
+$header = $this->t('{webct:webct:warning_header}');
+$generic_text = $this->t('{webct:webct:warning_text}');
+$continue_text = $this->t('{webct:webct:warning_continue}');
+$contact_info = $this->t('{webct:webct:warning_contact_info}',
+    array('%BODY%' => $warning,
+          '%SUBJECT%' => 'SP/WebCT: Warning al entrar '.
+            $this->data['username']));
+
 
 $this->includeAtTemplateBase('includes/header.php');
 echo "<h1>$header</h1>\n";
 echo "<p>$generic_text:</p>\n<br />\n";
 echo "<p><b>$warning</b></p>\n<br />\n";
+echo "<p>$contact_info</p>\n<br />\n";
 echo "<h3><center><a href=\"$url\">$continue_text</a></center></h3>\n";
 $this->includeAtTemplateBase('includes/footer.php');
