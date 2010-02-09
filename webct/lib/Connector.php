@@ -304,6 +304,8 @@ class sspmod_webct_Connector
         }
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_FORBID_REUSE, TRUE);
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 
         $response = curl_exec($ch);
         SimpleSAML_Logger::debug("WebCT: Reponse: " .
@@ -593,6 +595,8 @@ class sspmod_webct_Connector
         if (empty($courses))
             return $webct_courses;
         foreach ($courses as $course){
+            if (empty($course))
+                continue;
             $pattern = '|' . $this->course_pattern . '|';
             $count = preg_match($pattern, $course, $found) ;
             /* if not found, just ignore values */
