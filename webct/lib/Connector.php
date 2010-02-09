@@ -487,15 +487,18 @@ class sspmod_webct_Connector
             $ims_source = $course['ims_source'];
             $course_section_ims_source = $ims_source['source'];
             $course_section_ims_id = $ims_source['id'];
-            $course_msg[] = $course['code'].':'.$course['period'] .
-                " ($course_section_ims_id, $course_section_ims_source)";
+            // Build a more friendly course translation message
+            $cm = "$course_section_ims_id:$course_section_ims_source";
+            if (array_key_exists('code', $course))
+                $cm = $course['code'].':'.$course['period'] . " ($cm)";
+            $course_msg[] = $cm;
             $subrole = '';
-            $role = $course['role'];
+            $role = empty($course['role']) ? '01' : $course['role'];
             if (is_array($role)){
                 $subrole = $role[1];
                 $role = $role[0];
             }
-            $status = $course['status'];
+            $status = empty($course['status']) ? '1' : $course['status'];
             $xml .= "
                 <membership>
                     <sourcedid>
