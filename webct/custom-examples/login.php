@@ -1,4 +1,5 @@
 <?php
+/* Provision automatically a course for all people that login */
 
 /* WebCT SSO and on-the-fly provisioning for simpleSAMLphp */
 class MyWebCT_Connector extends sspmod_webct_Connector {
