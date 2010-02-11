@@ -126,7 +126,7 @@ class sspmod_webct_Connector
             $session->setData('WebCT', 'uid', $webct_uid);
 
             // Add / update courses
-            $webct_courses = update_webct_courses($webct_courses, $userid);
+            $webct_courses = $this->update_webct_courses($webct_courses, $userid);
 
 
             // enroll user in course sections
