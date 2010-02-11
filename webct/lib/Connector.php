@@ -83,6 +83,9 @@ class sspmod_webct_Connector
         // role and status translation maps
         $this->role_map = $config->getValue('role_map');
         $this->status_map = $config->getValue('status_map');
+
+        // Init some variables
+        $this->webct_courses = array();
     }
 
     function check_user_and_courses(&$webct_uid, &$webct_courses){
@@ -123,11 +126,12 @@ class sspmod_webct_Connector
             $session->setData('WebCT', 'uid', $webct_uid);
 
             // Add / update courses
-            $webct_courses = $this->update_webct_courses(
-                $webct_courses, $userid);
+            $webct_courses = update_webct_courses($webct_courses, $userid);
+
 
             // enroll user in course sections
             $this->enroll_user($userid, $webct_courses);
+            $this->webct_courses = $webct_courses;
 
             SimpleSAML_Logger::info("WebCT: Login '$userid'.");
         } else {
