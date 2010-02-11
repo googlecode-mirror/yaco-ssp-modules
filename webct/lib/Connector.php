@@ -56,7 +56,7 @@ class sspmod_webct_Connector
 
         // course code translation params
         $this->default_source = $config->getValue('default_source', 'WebCT');
-        $course_map_mode =$config->getValue('course_map_mode', NULL);
+        $course_map_mode = $config->getValue('course_map_mode', NULL);
         if ($course_map_mode == 'sql'){
             $dsn =$config->getValue('dsn');
             $dbuser =$config->getValue('dbuser');
@@ -95,6 +95,7 @@ class sspmod_webct_Connector
     function main(){
         // Get attributes
         $attrs = $this->get_saml_attributes();
+        $this->attrs = $attrs;
 
         // Get user id
         $userid = $attrs[$this->userid_attr][0];
@@ -142,7 +143,6 @@ class sspmod_webct_Connector
        an intermediate page. */
     function goto_webct($url){
         header("Location: $url");
-        die;
     }
 
 
