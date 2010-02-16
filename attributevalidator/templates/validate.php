@@ -93,8 +93,9 @@ $attributes = $this->data['attributes'];
 $required_attrs = $attributes[0];
 $recommended_attrs = $attributes[1];
 $optional_attrs = $attributes[2];
-$unknown_attrs = $attributes[3];
-$validates = $attributes[4];
+$generated_attrs = $attributes[3];
+$unknown_attrs = $attributes[4];
+$validates = $attributes[5];
 
 if($validates) {
 	echo('<span class="messageOk">' . $this->t('attributes_ok') . '</span>');
@@ -116,6 +117,11 @@ echo(present_attributes_table($this, $recommended_attrs, ''));
 <h2><?php echo $this->t('optional_attrs_header'); ?></h2>
 <?php
 echo(present_attributes_table($this, $optional_attrs, ''));
+?>
+
+<h2><?php echo $this->t('generated_attrs_header'); ?></h2>
+<?php
+echo(present_attributes_table($this, $generated_attrs, ''));
 ?>
 
 <h2><?php echo $this->t('unknown_attrs_header'); ?></h2>

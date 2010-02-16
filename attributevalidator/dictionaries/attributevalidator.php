@@ -31,6 +31,11 @@ $lang = array(
 		'es' => 'Atributos opcionales',
 	),
 
+	'generated_attrs_header' => array (
+		'en' => 'Generated attributes',
+		'es' => 'Atributos generados',
+	),
+
 	'unknown_attrs_header' => array (
 		'en' => 'Unknown attributes',
 		'es' => 'Atributos desconocidos',

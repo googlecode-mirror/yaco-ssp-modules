@@ -25,8 +25,8 @@ class sspmod_attributevalidator_AttributeValidator {
 		$required_attrs = $autoconfig->getValue('required_attrs');
 		$recommended_attrs = $autoconfig->getValue('recommended_attrs');
 		$optional_attrs = $autoconfig->getValue('optional_attrs');
-
-		$filtered_attributes = sspmod_attributevalidator_Utilities::validateAttributes($attributes, $required_attrs, $recommended_attrs, $optional_attrs);
+		$generated_attrs = $autoconfig->getValue('generated_attrs');
+		$filtered_attributes = sspmod_attributevalidator_Utilities::validateAttributes($attributes, $required_attrs, $recommended_attrs, $optional_attrs, $generated_attrs);
 
 		return $filtered_attributes;
 	}

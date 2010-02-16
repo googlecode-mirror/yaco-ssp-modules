@@ -27,6 +27,10 @@ $config = array (
 		'irisPublicKey', 'uid', 'o', 'ou', 'labeledURI',
 		'description', 'seeAlso',
 	),
+	'generated_attrs' => array(
+	        'eduPersonTargetedID', 'schacHomeOrganization',
+                'schacHomeOrganizationType',
+	),
 );
 
 ?>
