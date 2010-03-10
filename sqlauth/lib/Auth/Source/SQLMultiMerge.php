@@ -9,7 +9,7 @@
  * seperate BD or seperate BD domains.
  *
  * This module authenticate the user against a set of BD, save the data of the
- * different sources and later merge all data in one. 
+ * different login-sources and later proccess all data and generate the user attibutes. 
  *
  * 
  *
@@ -144,7 +144,7 @@ class sspmod_sqlauth_Auth_Source_SQLMultiMerge extends sspmod_core_Auth_UserPass
          *
 	 */
 
-	private $login_attributes;
+	protected $login_attributes;
 
 
 	/**
