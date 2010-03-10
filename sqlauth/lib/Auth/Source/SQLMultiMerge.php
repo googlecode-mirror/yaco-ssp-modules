@@ -241,6 +241,9 @@ class sspmod_sqlauth_Auth_Source_SQLMultiMerge extends sspmod_core_Auth_UserPass
 			catch (Exception $e) {
 				$this->login_attributes[$org_name] = array();
 			}
+			if($this->merge_type == 'first' && !empty($this->login_attributes[$org_name])) {
+				break;	
+			}
 		}
 
 		return $this->process_attributes();
