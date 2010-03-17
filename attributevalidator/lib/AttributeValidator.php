@@ -22,12 +22,13 @@ class sspmod_attributevalidator_AttributeValidator {
 		$config = SimpleSAML_Configuration::getInstance();
 		$autoconfig = $config->copyFromBase('attributesvalidator', 'config-attributevalidator.php');
 
-		$required_attrs = $autoconfig->getValue('required_attrs');
-		$recommended_attrs = $autoconfig->getValue('recommended_attrs');
-		$optional_attrs = $autoconfig->getValue('optional_attrs');
-		$generated_attrs = $autoconfig->getValue('generated_attrs');
-		$filtered_attributes = sspmod_attributevalidator_Utilities::validateAttributes($attributes, $required_attrs, $recommended_attrs, $optional_attrs, $generated_attrs);
-
+		$required_attrs = $autoconfig->getValue('required_attrs', array());
+		$recommended_attrs = $autoconfig->getValue('recommended_attrs', array());
+		$optional_attrs = $autoconfig->getValue('optional_attrs', array());
+		$generated_attrs = $autoconfig->getValue('generated_attrs', array());
+				$format_validation_regex = $autoconfig->getValue('format_validation_regex', array());
+		$filtered_attributes = sspmod_attributevalidator_Utilities::validateAttributes($attributes, $format_validation_regex,
+				                                    $required_attrs, $recommended_attrs, $optional_attrs, $generated_attrs);
 		return $filtered_attributes;
 	}
 }

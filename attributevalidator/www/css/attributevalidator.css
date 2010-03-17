@@ -54,11 +54,18 @@ table.attributes tr.odd.colorrow td {
     background: #ffdfe0;
 }
 
-table.attributes tr td.attrmissing {
+table.attributes tr td.attrvalid {
     width: 70px;
 }
 
-table.attributes tr td.attrmissing img {
+table.attributes tr td.invalid {
+    font-weight: bolder;
+}
+li.invalid {
+    font-weight: bolder;
+}
+
+table.attributes tr td.attrvalid img {
     margin: 0 auto;
 }
 

@@ -41,32 +41,57 @@ function present_attributes_list($t, $attributes) {
 	return $str;
 }
 
-function present_attributes_table($t, $attributes, $nameParent, $color_missing_rows=False) {
+function present_attributes_table($t, $attributes, $nameParent, $color_valid_rows=False) {
 	$alternate = array('odd', 'even'); $i = 0;
 	$parentStr = (strlen($nameParent) > 0)? strtolower($nameParent) . '_': '';
 	$str = (strlen($nameParent) > 0)? '<table class="attributes">': '<table class="attributes table_with_attributes">';
-	$str .= '<tr class="tableHeader"><th class="rightWhite">' . $t->t('table_present') . '</th><th class="rightWhite">' . $t->t('table_name') . '</th><th>' . $t->t('table_value') . '</th></tr>';
+	$str .= '<tr class="tableHeader"><th class="rightWhite">' . $t->t('table_valid') . '</th><th class="rightWhite">' . $t->t('table_name') . '</th><th>' . $t->t('table_value') . '</th></tr>';
 	$imgPath = '/' . $t->data['baseurlpath'] . 'module.php/attributevalidator/img/';
 	foreach ($attributes as $name => $data) {
 		$nameraw = $name;
-		$value = $data["value"];
-		$missingImg = $data["missing"] ? "delete" : "accept";
-		$missingMsg = $data["missing"] ? "Atributo no encontrado" : "Atributo encontrado";
-		$color_row = $data["missing"] && $color_missing_rows ? 'colorrow' : '';
-
+		$value = $data["value"];        
+		$color_row = '';
+		$attrvalid_title = '';
+		switch($data["valid"]) {
+			case 'valid':
+				$validImg = "accept";
+				$validMsg = $t->t('attr_valid');
+				break;
+			case 'invalid_format':
+				$validImg = "warning";
+				$validMsg = $t->t('attr_invalid');
+				$attrvalid_title = 'title="'.$t->t('correct_format').' '.htmlspecialchars($data["regex"]).'"';
+				if($color_valid_rows) {
+					$color_row = 'colorrow';
+				}
+				break;
+			default: 
+				$validImg = "delete";
+				$validMsg = $t->t('attr_not_found');
+				if($color_valid_rows) {
+					$color_row = 'colorrow';
+				}
+			break;
+		}
+        
 		if (preg_match('/^child_/', $nameraw)) {
 			$parentName = preg_replace('/^child_/', '', $nameraw);
 			foreach($value AS $child) {
 				$str .= '<tr class="odd"><td colspan="2" style="padding: 2em">' . present_attributes_table($t, $child, $parentName) . '</td></tr>';
 			}
 		} else {
+				$str .= '<tr class="' . $alternate[($i++ % 2)] . ' ' . $validImg . ' ' . $color_row . '"><td class="attrvalid rightWhite"><img src="' . $imgPath . $validImg . '.png" '.$attrvalid_title.' alt="' . $validMsg . '"/></td><td class="attrname  rightWhite">' . htmlspecialchars($name) . '</td>';
 			if (sizeof($value) > 1) {
-				$str .= '<tr class="' . $alternate[($i++ % 2)] . ' ' . $missingImg . ' ' . $color_row . '"><td class="attrmissing rightWhite"><img src="' . $imgPath . $missingImg . '.png" alt="' . $missingMsg . '"/></td><td class="attrname  rightWhite">' . htmlspecialchars($name) . '</td><td class="attrvalue"><ul>';
-				foreach ($value AS $listitem) {
+				$str .= '<td class="attrvalue"><ul>';
+				foreach ($value AS $index => $listitem) {
 					if ($nameraw === 'jpegPhoto') {
 						$str .= '<li><img src="data:image/jpeg;base64,' . $listitem . '" /></li>';
 					} else {
-						$str .= '<li>' . present_assoc($listitem) . '</li>';
+                        $td_class = '';
+                        if($data["valid"] == 'invalid_format' && in_array($index, $data['invalid_format_indexes'])) {                       
+                            $td_class = 'class="invalid"';
+                        }
+						$str .= '<li '.$td_class.'>'. present_assoc($listitem) . '</li>';
 					}
 				}
 				$str .= '</ul></td></tr>';
@@ -74,11 +99,15 @@ function present_attributes_table($t, $attributes, $nameParent, $color_missing_r
 				if(is_array($value)) {
 					$value = array_shift($value);
 				}
-				$str .= '<tr class="' . $alternate[($i++ % 2)] . ' ' . $missingImg . ' ' . $color_row . '"><td class="attrmissing rightWhite"><img src="'. $imgPath . $missingImg . '.png" alt="' . $missingMsg . '" /></td><td class="attrname rightWhite">' . htmlspecialchars($name) . '</td>';
+                $td_class = '';
+                if($data["valid"] == 'invalid_format') {
+                    $td_class = 'invalid"';
+                }
+                
 				if ($nameraw === 'jpegPhoto') {
 					$str .= '<td class="attrvalue"><img src="data:image/jpeg;base64,' . htmlspecialchars($value) . '" /></td></tr>';
 				} else {
-					$str .= '<td class="attrvalue">' . htmlspecialchars($value) . '</td></tr>';
+					$str .= '<td class="attrvalue '.$td_class.'">' . htmlspecialchars($value) . '</td></tr>';
 				}
 			}
 		}
@@ -89,6 +118,8 @@ function present_attributes_table($t, $attributes, $nameParent, $color_missing_r
 }
 
 $attributes = $this->data['attributes'];
+
+
 // attributes should have been processed by sspmod_attributevalidator_AttributeValidator::validateAttributes
 $required_attrs = $attributes[0];
 $recommended_attrs = $attributes[1];
@@ -106,22 +137,31 @@ if($validates) {
 
 <h2><?php echo $this->t('required_attrs_header'); ?></h2>
 <?php
-echo(present_attributes_table($this, $required_attrs, '', True));
+
+if(!empty($required_attrs)) {
+	echo(present_attributes_table($this, $required_attrs, '', True));
+}
 ?>
 
 <h2><?php echo $this->t('recommended_attrs_header'); ?></h2>
 <?php
-echo(present_attributes_table($this, $recommended_attrs, ''));
+if(!empty($recommended_attrs)) {
+	echo(present_attributes_table($this, $recommended_attrs, '', True));
+}
 ?>
 
 <h2><?php echo $this->t('optional_attrs_header'); ?></h2>
 <?php
-echo(present_attributes_table($this, $optional_attrs, ''));
+if(!empty($optional_attrs)) {
+	echo(present_attributes_table($this, $optional_attrs, '', True));
+}
 ?>
 
 <h2><?php echo $this->t('generated_attrs_header'); ?></h2>
 <?php
-echo(present_attributes_table($this, $generated_attrs, ''));
+if(!empty($generated_attrs)) {
+	echo(present_attributes_table($this, $generated_attrs, '', True));	
+}
 ?>
 
 <h2><?php echo $this->t('unknown_attrs_header'); ?></h2>

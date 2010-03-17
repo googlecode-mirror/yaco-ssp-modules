@@ -41,9 +41,9 @@ $lang = array(
 		'es' => 'Atributos desconocidos',
 	),
 
-	'table_present' => array (
-		'en' => 'Present',
-		'es' => 'Presente',
+	'table_valid' => array (
+		'en' => 'Valid',
+		'es' => 'Válido',
 	),
 
 	'table_name' => array (
@@ -64,6 +64,26 @@ $lang = array(
 	'attributes_bad' => array (
 		'en' => 'Your IdP doesn\'t honor CONFIA\'s attribute specification.',
 		'es' => 'Su IdP incumple las especificaciones de atributos de CONFIA.',
+	),
+    
+	'attr_valid' => array (
+		'en' => 'Valid attribute',
+		'es' => 'Atributo válido',
+	),
+
+	'attr_invalid' => array (
+		'en' => 'Invalid attribute format',
+		'es' => 'Atributo con formato inválido',
+	),
+
+	'attr_not_found' => array (
+		'en' => 'Attribute not found',
+		'es' => 'Atributo no encontrado o vacio',
+	),
+
+	'correct_format' => array (
+		'en' => "Regular expresion of the correct format:",
+		'es' => "Expresión regular del formato correcto:",
 	),
 
 );
