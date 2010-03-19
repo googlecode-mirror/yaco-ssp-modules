@@ -72,10 +72,36 @@ validity of the schema.
 Attributes found in the schema but not present in the configuration arrays are
 classified as unknown.
 
+
+Filter usage
+============
+
+Also is posible to enable a filter that no let the user continue to the SP if not all the required attributes 
+are valid. The filter will show a view with the invalid and unset attributes and will give the oportunity to
+the user to send to the IdP's admin an email report.
+
+To use the filter just add the following to the Wayf filters:
+ 
+'authproc'  =>	array(
+    ....
+                    80 => array(
+                        'class' => 'attributevalidator:ValidationFilter',
+						'check' => array('required_attrs'),
+                    ),
+    ....
+),
+
+
+'class': It must be 'attributevalidator:ValidationFilter'.
+'check': Array with the set of attributes you want to check. You can add any of the sets stablished at the config of the attributevalidator's module.
+
+The config of the attributevalidator's module is required by this filter.
+
+
 Configuration Options explained
 ===============================
 
-The filter needs the following options:
+The module needs the following options:
 
 - auth: the authentication source as defined in simplesaml's authsources.php.
 - required_attrs: array of attributes that must be all present for the schema
