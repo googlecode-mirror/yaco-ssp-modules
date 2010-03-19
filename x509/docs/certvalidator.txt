@@ -1,8 +1,0 @@
-Basic Installation
-==================
-
-1. Place your CA certificates into a directory
-2. Place your CRL certificatis into a directory
-3. Be sure you have run c_rehash into both ca and crl directories
-4. Link or copy your module config-template/config-certvalidator.php to your simpleSAMLphp config dir and edit capath and crlpath
-5. You can validate certs from: http://your_host/your_simplesaml_path/modules.php/certvalidator/validate.php
